@@ -74,6 +74,7 @@
             <div class="tab active" onclick="switchTab('routes')">ROUTES</div>
             <div class="tab" onclick="switchTab('pois')">MELDINGEN</div>
             <div class="tab" onclick="switchTab('tasks')">TAKEN</div>
+            <div class="tab" onclick="switchTab('ai')" style="color:var(--secondary)"><i class="fas fa-robot"></i> AI AGENT</div>
         </div>
 
         <div class="content-area" id="list-container">
@@ -118,7 +119,7 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         let currentTab = 'routes';
-        let dataStore = { routes: [], pois: [], tasks: [] };
+        let dataStore = { routes: [], pois: [], tasks: [], ai: [] };
         let markers = [];
 
         // Icons
@@ -129,7 +130,7 @@
         function switchTab(tab) {
             currentTab = tab;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
+            if (window.event) window.event.target.classList.add('active');
             renderList();
         }
 
@@ -148,7 +149,8 @@
         db.collection("pois").onSnapshot(s => {
             dataStore.pois = s.docs.map(d => ({id: d.id, ...d.data()}));
             document.getElementById('stat-pois').innerText = dataStore.pois.length;
-            if(currentTab === 'pois') renderList();
+            updateAiSuggestions();
+            if(currentTab === 'pois' || currentTab === 'ai') renderList();
             updateMapMarkers();
         });
 
@@ -157,6 +159,26 @@
             document.getElementById('stat-tasks').innerText = dataStore.tasks.length;
             if(currentTab === 'tasks') renderList();
         });
+
+        function updateAiSuggestions() {
+            const recentPois = dataStore.pois.filter(p => p.type === 'WEED');
+            if (recentPois.length > 0) {
+                dataStore.ai = [{
+                    id: 'ai-suggest-1',
+                    name: "AI Suggestie: Onkruid Verwijderen",
+                    desc: `Er zijn ${recentPois.length} nieuwe onkruidlocaties gemeld. Maak een route om deze te reinigen.`,
+                    type: 'suggestion',
+                    actionLabel: 'TAAK ACCEPTEREN'
+                }];
+            } else {
+                dataStore.ai = [{
+                    id: 'ai-idle',
+                    name: "AI Agent Slaapt",
+                    desc: "Geen nieuwe meldingen die actie vereisen.",
+                    type: 'idle'
+                }];
+            }
+        }
 
         function renderList() {
             const container = document.getElementById('list-container');
@@ -168,7 +190,7 @@
                 div.className = 'list-item';
 
                 let title = item.name || item.type || "Naamloos";
-                let sub = item.id;
+                let sub = item.desc || item.id;
                 let badge = "";
 
                 if(currentTab === 'tasks') {
@@ -212,9 +234,25 @@
             } else if(currentTab === 'pois') {
                 content = `<p>Type: ${item.type}</p><p>Coördinaten: ${item.latitude}, ${item.longitude}</p>`;
                 map.setView([item.latitude, item.longitude], 18);
+            } else if(currentTab === 'ai' && item.type === 'suggestion') {
+                content = `
+                    <p>${item.desc}</p>
+                    <button onclick="acceptAiSuggestion('${item.name}')" style="background:var(--secondary); color:white; border:none; padding:10px; width:100%; border-radius:5px;">${item.actionLabel}</button>
+                `;
             }
 
             document.getElementById('det-content').innerHTML = content;
+        }
+
+        function acceptAiSuggestion(name) {
+            db.collection("tasks").add({
+                name: name,
+                status: "open",
+                createdAt: Date.now(),
+                source: "AI_AGENT"
+            });
+            alert("AI Taak live verzonden naar app!");
+            hideDetails();
         }
 
         function showTaskDialog() {
@@ -230,7 +268,7 @@
 
         function deleteTask(id) {
             if(confirm("Weet je het zeker?")) {
-                db.collection("tasks").document(id).delete();
+                db.collection("tasks").doc(id).delete();
                 hideDetails();
             }
         }

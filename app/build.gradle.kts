@@ -47,7 +47,7 @@ android {
             
             firebaseAppDistribution {
                 artifactType = "APK"
-                testers = "your-email@example.com"
+                testers = "davidsmit88@gmail.com"
             }
         }
         debug {
