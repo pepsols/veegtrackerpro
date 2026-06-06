@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "534557233635",
+    "project_id": "veegtrackerpro-c03ae",
+    "storage_bucket": "veegtrackerpro-c03ae.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:534557233635:android:ca91a08ee12415526c50d6",
+        "android_client_info": {
+          "package_name": "com.example.veegtrackerpro"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXUEaD1vkgpaIN2NYtXxkQrA_VcgcTnbU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1038679093522",
+    "project_id": "uitgaanszoeker-15077",
+    "storage_bucket": "uitgaanszoeker-15077.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1038679093522:android:acd95575fecae664c643cb",
+        "android_client_info": {
+          "package_name": "SmitIT.Uitgaanszoeker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBn8YCG4oYKm3-PeJzbxalGAwL2U4sqif8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

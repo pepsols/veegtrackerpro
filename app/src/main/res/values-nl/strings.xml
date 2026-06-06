@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">Veegtracker Pro</string>
+    <string name="role_chauffeur">Chauffeur</string>
+    <string name="role_admin">Centrale Meldkamer</string>
+    <string name="action_start">Start</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_export">Exporteren</string>
+    <string name="action_import">Importeren</string>
+    <string name="tab_overview">Overzicht</string>
+    <string name="tab_routes">Routes</string>
+    <string name="label_tracking">GPS Volgen</string>
+    <string name="label_draw">Route starten</string>
+    <string name="label_stop_route">Route stoppen</string>
+    <string name="label_follow">Route selecteren</string>
+    <string name="label_veegwagen">Veegwagen</string>
+    <string name="label_status_gps">GPS OK</string>
+    <string name="label_status_battery">Batterij 85%</string>
+    <string name="label_route_details">Route Details</string>
+    <string name="label_no_route_selected">Geen route geselecteerd</string>
+    <string name="label_points">Punten</string>
+    <string name="label_date">Datum</string>
+    <string name="action_generate_pdf">Dagrapportage genereren</string>
+    <string name="report_title">Dagrapportage</string>
+    <string name="report_driver">Chauffeur: Chauffeur</string>
+    <string name="report_total_points">Totaal aantal punten: %d</string>
+    <string name="report_summary">Samenvatting: Route succesvol voltooid.</string>
+    <string name="label_route_progress">Route voortgang: %d%%</string>
+    <string name="instruction_continue">Rechtdoor vervolgen</string>
+    <string name="instruction_left">Sla linksaf</string>
+    <string name="instruction_right">Sla rechtsaf</string>
+</resources>

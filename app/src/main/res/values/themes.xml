@@ -1,0 +1,4 @@
+<resources>
+
+    <style name="Theme.VeegtrackerPro" parent="Theme.MaterialComponents.Light" />
+</resources>

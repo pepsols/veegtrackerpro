@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="OsmAnd 5.3.8" schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd http://www.garmin.com/xmlschemas/PowerExtension/v1 http://www.garmin.com/xmlschemas/PowerExtensionv1.xsd http://www.topografix.com/GPX/gpx_style/0/2 http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd http://www.garmin.com/xmlschemas/PowerExtension/v1 http://www.garmin.com/xmlschemas/PowerExtensionv1.xsd http://www.topografix.com/GPX/gpx_style/0/2 http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:gpxpx="http://www.garmin.com/xmlschemas/PowerExtension/v1" xmlns:gpx_style="http://www.topografix.com/GPX/gpx_style/0/2">
+  <metadata>
+    <name>markers 2026</name>
+    <author>
+      <name>gpx.studio</name>
+      <link href="https://gpx.studio"/>
+    </author>
+    <time>2026-05-15T21:14:57.000Z</time>
+  </metadata>
+  <wpt lat="52.051199" lon="5.287661">
+    <ele>4.869872952787999</ele>
+    <time>2026-05-15T21:18:34.000Z</time>
+    <name>Wegversmalling</name>
+    <cmt>2 plateaus onkruidvrij maken</cmt>
+    <desc>2 plateaus onkruidvrij maken</desc>
+    <sym>Alert</sym>
+  </wpt>
+  <wpt lat="52.055109" lon="5.290494">
+    <ele>5.440000862862052</ele>
+    <time>2026-05-15T21:18:34.000Z</time>
+    <name>Wegversmalling</name>
+    <cmt>4 plateaus onkruidvrij maken</cmt>
+    <desc>4 plateaus onkruidvrij maken</desc>
+    <sym>Alert</sym>
+  </wpt>
+  <wpt lat="52.0496006" lon="5.2656323">
+    <time>2026-05-15T21:18:30.000Z</time>
+    <name>Wegversmalling</name>
+  </wpt>
+  <wpt lat="52.0519234" lon="5.2698998">
+    <time>2026-05-15T21:18:10.000Z</time>
+    <name>Rijsenburgselaan, Driebergen-Rijsenburg</name>
+  </wpt>
+  <wpt lat="52.0512956" lon="5.2687193">
+    <time>2026-05-15T21:17:52.000Z</time>
+    <name>Rijsenburgselaan, Driebergen-Rijsenburg</name>
+  </wpt>
+  <wpt lat="52.0501252" lon="5.2665979">
+    <time>2026-05-15T21:17:01.000Z</time>
+    <name>Voetgangersoversteekplaats</name>
+  </wpt>
+  <wpt lat="52.0486307" lon="5.2638406">
+    <time>2026-05-15T21:14:57.000Z</time>
+    <name>Wegversmalling</name>
+  </wpt>
+  <wpt lat="52.03157119227743" lon="5.348303317122363">
+    <name>Plateau</name>
+  </wpt>
+  <wpt lat="52.0301455" lon="5.3508139">
+    <name>Paaltje</name>
+  </wpt>
+  <wpt lat="52.0277328" lon="5.3459966">
+    <name>Wegversmalling</name>
+  </wpt>
+  <wpt lat="52.04137" lon="5.339453">
+    <ele>9.401444054073805</ele>
+    <name>verkeersplateau</name>
+    <cmt>onkruid en verhoging</cmt>
+    <desc>onkruid en verhoging</desc>
+    <sym>Alert</sym>
+  </wpt>
+  <wpt lat="52.0324821" lon="5.3457177">
+    <name>Voetgangersoversteekplaats</name>
+  </wpt>
+  <wpt lat="52.031877" lon="5.3457492">
+    <name>Schoonoordselaan, Doorn</name>
+  </wpt>
+  <wpt lat="52.0303171" lon="5.3446072">
+    <name>Plateau</name>
+  </wpt>
+  <wpt lat="52.030393" lon="5.3451329">
+    <name>Voetgangersoversteekplaats</name>
+  </wpt>
+  <wpt lat="52.02993094245573" lon="5.347013172099988">
+    <name>De Beaufortweg, Doorn</name>
+  </wpt>
+  <wpt lat="52.0298647" lon="5.3469118">
+    <name>Hoogsteeg, Doorn</name>
+  </wpt>
+  <wpt lat="52.0291626" lon="5.3467054">
+    <name>Hoogsteeg, Doorn</name>
+  </wpt>
+  <wpt lat="52.02992085114723" lon="5.346627087310651">
+    <name>drempel</name>
+  </wpt>
+  <wpt lat="52.03241118652336" lon="5.3458866484523835">
+    <name>onkruidvrij maken</name>
+  </wpt>
+  <wpt lat="52.03349506176202" lon="5.348992758857466">
+    <name>plateau onkruidvrij</name>
+  </wpt>
+  <wpt lat="52.0344327186867" lon="5.345629080374757">
+    <name>onkruidvrij maken</name>
+  </wpt>
+  <wpt lat="52.03411576643341" lon="5.345615668578563">
+    <name>onkruidvrij maken</name>
+  </wpt>
+  <wpt lat="52.03557748697306" lon="5.3340233054290795">
+    <name>fietspad meenemen</name>
+  </wpt>
+  <wpt lat="52.059167" lon="5.289533">
+    <ele>5.671039637843187</ele>
+    <name>voetgangersoversteekplaats</name>
+    <cmt>onkruidvrij maken
+</cmt>
+    <desc>onkruidvrij maken
+</desc>
+    <sym>Alert</sym>
+  </wpt>
+  <wpt lat="52.059302" lon="5.289107">
+    <ele>5.669334907394881</ele>
+    <name>kleine verhoging en oversteek</name>
+    <cmt>onkruidvrij maken</cmt>
+    <desc>onkruidvrij maken</desc>
+    <sym>Alert</sym>
+  </wpt>
+  <wpt lat="52.04807317591707" lon="5.294195115566254">
+    <ele>4.770641326904297</ele>
+    <name>rotonde driebergen / horst</name>
+    <cmt>plateaus onkruid</cmt>
+    <desc>plateaus onkruid</desc>
+    <sym>Information</sym>
+  </wpt>
+  <wpt lat="52.04811276531041" lon="5.294661819934845">
+    <ele>4.576995849589139</ele>
+    <name>rotonde driebergen / horst</name>
+    <cmt>plateaus onkruid</cmt>
+    <desc>plateaus onkruid</desc>
+    <sym>Information</sym>
+  </wpt>
+  <wpt lat="52.04789" lon="5.29431">
+    <ele>4.761428572695877</ele>
+    <name>rotonde driebergen / horst</name>
+    <cmt>plateaus onkruid</cmt>
+    <desc>plateaus onkruid</desc>
+    <sym>Information</sym>
+  </wpt>
+  <wpt lat="52.050313" lon="5.28753">
+    <ele>5.001204588734019</ele>
+    <name>voetgangers middenstuk onkruid en schoonmaken</name>
+    <cmt>plateaus onkruid</cmt>
+    <desc>plateaus onkruid</desc>
+    <sym>Information</sym>
+  </wpt>
+</gpx>

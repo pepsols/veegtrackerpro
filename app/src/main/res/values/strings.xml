@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">Veegtracker Pro</string>
+    <string name="role_chauffeur">Driver</string>
+    <string name="role_admin">Central Control Room</string>
+    <string name="action_start">Start</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_export">Export</string>
+    <string name="action_import">Import</string>
+    <string name="tab_overview">Overview</string>
+    <string name="tab_routes">Routes</string>
+    <string name="label_tracking">GPS Tracking</string>
+    <string name="label_draw">Start route</string>
+    <string name="label_stop_route">Stop route</string>
+    <string name="label_follow">Select route</string>
+    <string name="label_veegwagen">Veegwagen</string>
+    <string name="label_status_gps">GPS OK</string>
+    <string name="label_status_battery">Battery 85%</string>
+    <string name="label_route_details">Route Details</string>
+    <string name="label_no_route_selected">No route selected</string>
+    <string name="label_points">Points</string>
+    <string name="label_date">Date</string>
+    <string name="action_generate_pdf">Generate PDF Report</string>
+    <string name="report_title">Daily Report</string>
+    <string name="report_driver">Driver: Chauffeur</string>
+    <string name="report_total_points">Total points: %d</string>
+    <string name="report_summary">Summary: Route successfully completed.</string>
+    <string name="label_route_progress">Route Progress: %d%%</string>
+    <string name="instruction_continue">Continue straight</string>
+    <string name="instruction_left">Turn left</string>
+    <string name="instruction_right">Turn right</string>
+</resources>

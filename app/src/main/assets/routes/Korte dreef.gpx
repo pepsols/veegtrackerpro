@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx creator="https://gpx.studio" version="1.1" schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd http://www.garmin.com/xmlschemas/PowerExtension/v1 http://www.garmin.com/xmlschemas/PowerExtensionv1.xsd http://www.topografix.com/GPX/gpx_style/0/2 http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd http://www.garmin.com/xmlschemas/PowerExtension/v1 http://www.garmin.com/xmlschemas/PowerExtensionv1.xsd http://www.topografix.com/GPX/gpx_style/0/2 http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:gpxpx="http://www.garmin.com/xmlschemas/PowerExtension/v1" xmlns:gpx_style="http://www.topografix.com/GPX/gpx_style/0/2">
+  <metadata>
+    <name>Korte dreef</name>
+    <author>
+      <name>gpx.studio</name>
+      <link href="https://gpx.studio"/>
+    </author>
+  </metadata>
+  <trk>
+    <name>Korte dreef</name>
+    <trkseg>
+      <trkpt lat="52.05150782831683" lon="5.281110237051394">
+        <ele>4.773377226806704</ele>
+      </trkpt>
+      <trkpt lat="52.05150030816259" lon="5.281290612302854">
+        <ele>4.811567984033471</ele>
+      </trkpt>
+      <trkpt lat="52.05165743884058" lon="5.281712512420853">
+        <ele>4.977865926995562</ele>
+      </trkpt>
+      <trkpt lat="52.05175945121033" lon="5.282005214085473">
+        <ele>5.000209468218052</ele>
+      </trkpt>
+      <trkpt lat="52.05186684874005" lon="5.2823383267615895">
+        <ele>5.065362598999621</ele>
+      </trkpt>
+      <trkpt lat="52.05181376692832" lon="5.282391598291866">
+        <ele>5.0925872186212215</ele>
+      </trkpt>
+      <trkpt lat="52.05185982753133" lon="5.282538344257404">
+        <ele>5.125885937738963</ele>
+      </trkpt>
+      <trkpt lat="52.05182113063282" lon="5.282694643299237">
+        <ele>5.1488652789164995</ele>
+      </trkpt>
+      <trkpt lat="52.05164434466451" lon="5.2831941035044">
+        <ele>5.198673992658273</ele>
+      </trkpt>
+      <trkpt lat="52.05166518211732" lon="5.283209957153048">
+        <ele>5.201558866317713</ele>
+      </trkpt>
+      <trkpt lat="52.0518583939716" lon="5.2826545459485885">
+        <ele>5.153166012357497</ele>
+      </trkpt>
+      <trkpt lat="52.051786648034295" lon="5.282435362953265">
+        <ele>5.108298214118209</ele>
+      </trkpt>
+      <trkpt lat="52.05176694393748" lon="5.282456509683243">
+        <ele>5.115180751733112</ele>
+      </trkpt>
+      <trkpt lat="52.05173780350103" lon="5.282390779720174">
+        <ele>5.098703962197042</ele>
+      </trkpt>
+      <trkpt lat="52.05180924453725" lon="5.282325049755627">
+        <ele>5.074681809605069</ele>
+      </trkpt>
+      <trkpt lat="52.05182373461017" lon="5.28229420127019">
+        <ele>5.058289459890986</ele>
+      </trkpt>
+      <trkpt lat="52.051624236533456" lon="5.281730339765119">
+        <ele>4.978381925280168</ele>
+      </trkpt>
+      <trkpt lat="52.05149601711881" lon="5.2813462786519665">
+        <ele>4.816389367290789</ele>
+      </trkpt>
+      <trkpt lat="52.05148144570083" lon="5.281092717323446">
+        <ele>4.786232490338285</ele>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
