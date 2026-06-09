@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inloggen | Veegtracker Pro Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body class="login-body">
+    <main class="login-shell">
+      <section class="login-panel login-panel-brand">
+        <p class="eyebrow">Veegtracker Pro</p>
+        <h1>Dashboard login</h1>
+        <p class="hero-copy">
+          Meld je aan als planner of beheerder om routes, ritten en aandachtspunten
+          vanuit de webomgeving te volgen.
+        </p>
+        <div class="login-feature-list">
+          <div class="login-feature">
+            <strong>Routebewaking</strong>
+            <span>Bekijk voortgang, vertraging en status per voertuig.</span>
+          </div>
+          <div class="login-feature">
+            <strong>E-mail en wachtwoord</strong>
+            <span>Directe login zonder Google-popup of browserbeperkingen.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="login-panel login-panel-form">
+        <div class="panel-head panel-head-stack">
+          <div>
+            <p class="eyebrow">Beheeromgeving</p>
+            <h2>Inloggen</h2>
+          </div>
+          <a class="ghost-button" href="./index.html">Terug naar overzicht</a>
+        </div>
+
+        <form class="login-form" id="login-form">
+          <div class="auth-callout">
+            <strong>Inloggen met e-mail</strong>
+            <span>
+              Gebruik een bestaand Firebase Auth-account met e-mailadres en wachtwoord.
+            </span>
+          </div>
+
+          <label class="field">
+            <span>E-mailadres</span>
+            <input
+              id="email-input"
+              type="email"
+              name="email"
+              placeholder="planner@veegtrackerpro.nl"
+              autocomplete="username"
+              required
+            />
+          </label>
+
+          <label class="field">
+            <span>Wachtwoord</span>
+            <input
+              id="password-input"
+              type="password"
+              name="password"
+              placeholder="••••••••••"
+              autocomplete="current-password"
+              required
+            />
+          </label>
+
+          <button class="primary-button" id="email-login-button" type="submit">
+            Inloggen
+          </button>
+
+          <p class="auth-status" id="auth-status" aria-live="polite"></p>
+          <p class="form-note">
+            Deze login gebruikt Firebase Authentication met e-mail en wachtwoord.
+          </p>
+        </form>
+      </section>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

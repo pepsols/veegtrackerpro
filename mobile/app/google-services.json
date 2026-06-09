@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "534557233635",
+    "firebase_url": "https://veegtrackerpro-c03ae-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "veegtrackerpro-c03ae",
+    "storage_bucket": "veegtrackerpro-c03ae.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:534557233635:android:ca91a08ee12415526c50d6",
+        "android_client_info": {
+          "package_name": "com.example.veegtrackerpro"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "534557233635-i2n8bu8q55evrgoaqieap0ehrl3ebhjv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.veegtrackerpro",
+            "certificate_hash": "740120521f1e05214b427430e78cd2b03e786bb7"
+          }
+        },
+        {
+          "client_id": "534557233635-laupouig8smn8equlle50f4t43j4ktj5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXUEaD1vkgpaIN2NYtXxkQrA_VcgcTnbU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "534557233635-laupouig8smn8equlle50f4t43j4ktj5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

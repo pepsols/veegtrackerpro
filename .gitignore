@@ -13,3 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+/mobile/.gradle
+/mobile/build
+/mobile/local.properties
+/mobile/app/build

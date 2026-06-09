@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Routes | Veegtracker Pro Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div>
+          <p class="eyebrow">Veegtracker Pro</p>
+          <h1>Routes</h1>
+          <p class="sidebar-copy">Volledig overzicht van geplande, actieve en te controleren routes.</p>
+        </div>
+
+        <nav class="nav">
+          <a class="nav-item" href="./index.html">Overzicht</a>
+          <a class="nav-item active" href="./routes.html">Routes</a>
+          <a class="nav-item" href="./login.html">Account</a>
+        </nav>
+
+        <div class="nav-section">
+          <p class="eyebrow">Categorieen</p>
+          <nav class="nav">
+            <a class="nav-item" href="#routes-category">Routes</a>
+            <a class="nav-item" href="#objects-category">Objecten</a>
+            <a class="nav-item" href="#markers-category">Markerpunten</a>
+          </nav>
+        </div>
+
+        <div class="sidebar-stack">
+          <div class="status-card">
+            <p class="status-label">Routefocus</p>
+            <p class="status-value">12 open</p>
+            <p class="status-meta">5 actief, 4 gepland, 3 controle</p>
+          </div>
+          <div class="session-card" id="user-session"></div>
+        </div>
+      </aside>
+
+      <main class="content">
+        <header class="hero">
+          <div>
+            <p class="eyebrow">Route-overzicht</p>
+            <h2>Planning, status en aandachtspunten per route</h2>
+            <p class="hero-copy">
+              Deze pagina is bedoeld als basis voor filteren, status en route-details.
+              Voor nu tonen we statische voorbeelddata in een beheervriendelijke layout.
+            </p>
+          </div>
+          <div class="hero-panel">
+            <p class="hero-panel-label">Vandaag</p>
+            <p class="hero-panel-value">3 routes met aandacht</p>
+            <p class="hero-panel-meta">Controle op vertraging, GPS of incomplete ritten</p>
+          </div>
+        </header>
+
+        <section class="toolbar">
+          <div class="filter-pills">
+            <button class="filter-pill active" type="button" data-filter="all">Alles</button>
+            <button class="filter-pill" type="button" data-filter="in_progress">In uitvoering</button>
+            <button class="filter-pill" type="button" data-filter="not_started">Gepland</button>
+            <button class="filter-pill" type="button" data-filter="attention">Controle</button>
+          </div>
+          <a class="ghost-button" href="./index.html">Terug naar overzicht</a>
+        </section>
+
+        <section class="operations-grid">
+          <section class="operations-main">
+            <div class="operations-strip" id="operations-strip">
+              <article class="metric-card compact-card">
+                <p class="metric-label">Routes</p>
+                <p class="metric-value" id="op-routes">0</p>
+                <p class="metric-meta" id="op-routes-meta">Nog geen data</p>
+              </article>
+              <article class="metric-card compact-card">
+                <p class="metric-label">Afgevinkte ritten</p>
+                <p class="metric-value" id="op-runs">0</p>
+                <p class="metric-meta" id="op-runs-meta">Nog geen data</p>
+              </article>
+              <article class="metric-card compact-card">
+                <p class="metric-label">Trackingpunten</p>
+                <p class="metric-value" id="op-tracking">0</p>
+                <p class="metric-meta" id="op-tracking-meta">Nog geen data</p>
+              </article>
+            </div>
+
+            <section class="panel" id="routes-category">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Lijst</p>
+                  <h3>Alle routes</h3>
+                </div>
+              </div>
+              <div class="route-table" id="route-table"></div>
+            </section>
+
+            <section class="panel" id="objects-category">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Objecten</p>
+                  <h3>Objecten en aandachtspunten</h3>
+                </div>
+              </div>
+              <div class="detail-list" id="detail-pois"></div>
+            </section>
+
+            <section class="panel" id="markers-category">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Markers</p>
+                  <h3>Losse markerpunten</h3>
+                </div>
+              </div>
+              <div class="detail-list" id="detail-markers"></div>
+            </section>
+          </section>
+
+          <aside class="detail-pane panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Detail</p>
+                <h3 id="detail-title">Selecteer een route</h3>
+              </div>
+              <strong class="pill idle" id="detail-status">Geen status</strong>
+            </div>
+
+            <div class="detail-preview" id="detail-preview"></div>
+            <div class="detail-map" id="detail-map"></div>
+            <div class="map-legend">
+              <div class="legend-item">
+                <span class="legend-swatch legend-swatch-route"></span>
+                <span>Geplande route</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-swatch legend-swatch-track"></span>
+                <span>Gereden spoor</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-swatch legend-swatch-vehicle"></span>
+                <span>Laatst opgeslagen positie</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-swatch legend-swatch-poi"></span>
+                <span>Object / aandachtspunt</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-swatch legend-swatch-marker-collection"></span>
+                <span>Losse markerpunten</span>
+              </div>
+            </div>
+
+            <div class="detail-stats" id="detail-stats"></div>
+
+            <section class="detail-section">
+              <h4>Verbonden met</h4>
+              <div class="detail-list" id="detail-connection"></div>
+            </section>
+
+            <section class="detail-section">
+              <h4>Laatste ritten</h4>
+              <div class="detail-list" id="detail-runs"></div>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

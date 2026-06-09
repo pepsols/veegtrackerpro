@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Veegtracker Pro Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div>
+          <p class="eyebrow">Veegtracker Pro</p>
+          <h1>Dashboard</h1>
+          <p class="sidebar-copy">Centrale webomgeving voor routes, voortgang en meldingen.</p>
+        </div>
+
+        <nav class="nav">
+          <a class="nav-item active" href="./index.html">Overzicht</a>
+          <a class="nav-item" href="./routes.html">Routes</a>
+          <a class="nav-item" href="./login.html">Account</a>
+        </nav>
+
+        <div class="sidebar-stack">
+          <div class="status-card">
+            <p class="status-label">Actieve dienst</p>
+            <p class="status-value">Ochtendronde</p>
+            <p class="status-meta">Route-overzicht en meldingen</p>
+          </div>
+          <div class="session-card" id="user-session"></div>
+        </div>
+      </aside>
+
+      <main class="content">
+        <header class="hero" id="overzicht">
+          <div>
+            <p class="eyebrow">Overzicht</p>
+            <h2>Webdashboard voor beheer en monitoring</h2>
+            <p class="hero-copy">
+              Dit dashboard gebruikt nu dezelfde Google-login via Firebase als de mobiele app,
+              zodat beheer en operatie vanuit één identiteit kunnen werken.
+            </p>
+          </div>
+          <div class="hero-panel">
+            <p class="hero-panel-label">Systeemstatus</p>
+            <p class="hero-panel-value">Operationeel</p>
+            <p class="hero-panel-meta">Volgende stap: routehistorie, filters en kaartkoppeling</p>
+          </div>
+        </header>
+
+        <section class="metrics">
+          <article class="metric-card">
+            <p class="metric-label">Actieve routes</p>
+            <p class="metric-value" id="metric-routes">0</p>
+            <p class="metric-meta" id="metric-routes-meta">Nog geen routes geladen</p>
+          </article>
+          <article class="metric-card">
+            <p class="metric-label">Afgevinkte routes</p>
+            <p class="metric-value" id="metric-vehicles">0</p>
+            <p class="metric-meta" id="metric-vehicles-meta">Nog geen afgevinkte routes</p>
+          </article>
+          <article class="metric-card">
+            <p class="metric-label">Voltooide ritten</p>
+            <p class="metric-value" id="metric-completed">0</p>
+            <p class="metric-meta" id="metric-completed-meta">Nog geen afgeronde ritten</p>
+          </article>
+        </section>
+
+        <section class="grid">
+          <article class="panel wide" id="routes">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Routes</p>
+                <h3>Planning vandaag</h3>
+              </div>
+              <a class="ghost-button" href="./routes.html">Open route-overzicht</a>
+            </div>
+
+            <div class="route-list" id="route-list"></div>
+          </article>
+
+          <article class="panel" id="ritten">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Status</p>
+                <h3>Routevoortgang</h3>
+              </div>
+            </div>
+
+            <ul class="vehicle-list">
+              <li>
+                <span>Noordroute</span>
+                <strong class="pill success">Afgerond</strong>
+              </li>
+              <li>
+                <span>Centrumroute</span>
+                <strong class="pill warn">Controle</strong>
+              </li>
+              <li>
+                <span>Zuidroute</span>
+                <strong class="pill idle">Gepland</strong>
+              </li>
+            </ul>
+          </article>
+
+          <article class="panel" id="meldingen">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Meldingen</p>
+                <h3>Aandachtspunten</h3>
+              </div>
+            </div>
+
+            <ul class="alert-list">
+              <li>Route Noord heeft 14 minuten vertraging.</li>
+              <li>2 routes vragen extra controle.</li>
+              <li>Exportmodule nog niet gekoppeld.</li>
+            </ul>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

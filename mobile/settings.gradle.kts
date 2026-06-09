@@ -24,4 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "veegtracker pro"
 include(":app")
-project(":app").projectDir = file("mobile/app")
+ 

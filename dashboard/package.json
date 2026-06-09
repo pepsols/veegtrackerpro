@@ -1,0 +1,10 @@
+{
+  "name": "veegtrackerpro-dashboard",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Static dashboard for Veegtracker Pro",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  }
+}
