@@ -1,6 +1,8 @@
 package com.example.veegtrackerpro.ui.driver
 
 import android.Manifest
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,6 +33,7 @@ import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.GpsNotFixed
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
@@ -322,6 +325,18 @@ fun DriverScreen(
                                 contentScale = ContentScale.Crop
                             )
                         }
+                        Button(
+                            onClick = { openNavigationToRouteStart(context, route) },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.NearMe,
+                                contentDescription = null
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Navigeer naar startpunt")
+                        }
                         Text("Weet je zeker dat je de route \"${route.name}\" wilt starten?")
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -403,6 +418,37 @@ private fun extractDriverPreviewPoint(gpxData: String): GeoPoint? {
     val lat = match.groupValues.getOrNull(2)?.toDoubleOrNull() ?: return null
     val lon = match.groupValues.getOrNull(3)?.toDoubleOrNull() ?: return null
     return GeoPoint(lat, lon)
+}
+
+private fun openNavigationToRouteStart(context: android.content.Context, route: Route): Boolean {
+    val startPoint = extractDriverPreviewPoint(route.gpxData) ?: return false
+
+    val googleMapsIntent = Intent(
+        Intent.ACTION_VIEW,
+        Uri.parse("google.navigation:q=${startPoint.latitude},${startPoint.longitude}")
+    ).apply {
+        setPackage("com.google.android.apps.maps")
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+
+    return try {
+        context.startActivity(googleMapsIntent)
+        true
+    } catch (_: ActivityNotFoundException) {
+        val fallbackIntent = Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("geo:${startPoint.latitude},${startPoint.longitude}?q=${startPoint.latitude},${startPoint.longitude}(Startpunt route)")
+        ).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+
+        try {
+            context.startActivity(fallbackIntent)
+            true
+        } catch (_: ActivityNotFoundException) {
+            false
+        }
+    }
 }
 
 @Composable
