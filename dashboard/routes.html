@@ -58,14 +58,14 @@
             <p class="eyebrow">Route-overzicht</p>
             <h2>Planning, status en aandachtspunten per route</h2>
             <p class="hero-copy">
-              Deze pagina is bedoeld als basis voor filteren, status en route-details.
-              Voor nu tonen we statische voorbeelddata in een beheervriendelijke layout.
+              Houd direct zicht op ritstatus, afwijkingen, objecten en opvolging per route.
+              Gebruik dit scherm om prioriteiten te kiezen en vervolgacties te plannen.
             </p>
           </div>
           <div class="hero-panel">
             <p class="hero-panel-label">Vandaag</p>
             <p class="hero-panel-value">3 routes met aandacht</p>
-            <p class="hero-panel-meta">Controle op vertraging, GPS of incomplete ritten</p>
+            <p class="hero-panel-meta">Controle op afwijking, incomplete ritten en directe opvolging</p>
           </div>
         </header>
 
@@ -99,6 +99,16 @@
               </article>
             </div>
 
+            <section class="panel" id="attention-category">
+              <div class="panel-head">
+                <div>
+                  <p class="eyebrow">Aandacht</p>
+                  <h3>Wat vandaag direct opvalt</h3>
+                </div>
+              </div>
+              <div class="exception-list" id="route-attention-list"></div>
+            </section>
+
             <section class="panel" id="routes-category">
               <div class="panel-head">
                 <div>
@@ -110,23 +120,17 @@
             </section>
 
             <section class="panel" id="objects-category">
-              <div class="panel-head">
-                <div>
-                  <p class="eyebrow">Objecten</p>
-                  <h3>Objecten en aandachtspunten</h3>
-                </div>
-              </div>
-              <div class="detail-list" id="detail-pois"></div>
+              <details class="accordion-panel">
+                <summary class="accordion-summary">Objecten en aandachtspunten</summary>
+                <div class="detail-list" id="detail-pois"></div>
+              </details>
             </section>
 
             <section class="panel" id="markers-category">
-              <div class="panel-head">
-                <div>
-                  <p class="eyebrow">Markers</p>
-                  <h3>Losse markerpunten</h3>
-                </div>
-              </div>
-              <div class="detail-list" id="detail-markers"></div>
+              <details class="accordion-panel">
+                <summary class="accordion-summary">Losse markerpunten</summary>
+                <div class="detail-list" id="detail-markers"></div>
+              </details>
             </section>
           </section>
 
@@ -139,6 +143,7 @@
               <strong class="pill idle" id="detail-status">Geen status</strong>
             </div>
 
+            <div class="detail-focus" id="detail-focus"></div>
             <div class="detail-preview" id="detail-preview"></div>
             <div class="detail-map" id="detail-map"></div>
             <div class="map-legend">
@@ -167,13 +172,30 @@
             <div class="detail-stats" id="detail-stats"></div>
 
             <section class="detail-section">
-              <h4>Verbonden met</h4>
-              <div class="detail-list" id="detail-connection"></div>
+              <details class="accordion-panel" open>
+                <summary class="accordion-summary">Routegezondheid</summary>
+                <div class="detail-list" id="detail-health"></div>
+              </details>
             </section>
 
             <section class="detail-section">
-              <h4>Laatste ritten</h4>
-              <div class="detail-list" id="detail-runs"></div>
+              <h4>Snelle acties</h4>
+              <div class="detail-actions" id="detail-actions"></div>
+              <div class="detail-action-state" id="detail-action-state"></div>
+            </section>
+
+            <section class="detail-section">
+              <details class="accordion-panel">
+                <summary class="accordion-summary">Verbonden met</summary>
+                <div class="detail-list" id="detail-connection"></div>
+              </details>
+            </section>
+
+            <section class="detail-section">
+              <details class="accordion-panel">
+                <summary class="accordion-summary">Laatste ritten</summary>
+                <div class="detail-list" id="detail-runs"></div>
+              </details>
             </section>
           </aside>
         </section>

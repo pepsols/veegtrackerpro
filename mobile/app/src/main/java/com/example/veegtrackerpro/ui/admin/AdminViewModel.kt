@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.osmdroid.util.GeoPoint
@@ -52,6 +53,10 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         if (route != null) db.veegDao().getPoisForRoute(route.id)
         else kotlinx.coroutines.flow.flowOf(emptyList())
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val allPoisByRouteId: StateFlow<Map<Long, List<Poi>>> = db.veegDao().getAllPois()
+        .map { allPois -> allPois.groupBy { it.routeId } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     fun selectRoute(route: Route) {
         _selectedRoute.value = route

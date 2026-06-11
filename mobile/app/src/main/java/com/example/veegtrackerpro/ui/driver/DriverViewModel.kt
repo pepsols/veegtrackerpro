@@ -16,6 +16,8 @@ import com.example.veegtrackerpro.service.TrackingService
 import com.example.veegtrackerpro.util.ProgressSnapshot
 import com.example.veegtrackerpro.util.RouteProgressCalculator
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -27,6 +29,10 @@ import java.io.InputStream
 import java.util.Locale
 
 class DriverViewModel(application: Application) : AndroidViewModel(application) {
+
+    sealed interface UiEvent {
+        data class Message(val text: String) : UiEvent
+    }
 
     private val db = (application as VeegApplication).database
     private val gpxParser = GpxParser()
@@ -72,6 +78,12 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
     private val _currentRun = MutableStateFlow<RouteRun?>(null)
     val currentRun: StateFlow<RouteRun?> = _currentRun
 
+    private val _events = MutableSharedFlow<UiEvent>(
+        extraBufferCapacity = 4,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val events = _events
+
     val allRoutes = db.veegDao().getAllRoutes()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -92,6 +104,9 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
                 )
                 val routeId = db.veegDao().insertRoute(route)
                 selectRoute(route.copy(id = routeId))
+                emitMessage("Route geimporteerd en direct geselecteerd.")
+            } else {
+                emitMessage("Geen bruikbare routepunten gevonden in dit bestand.")
             }
         }
     }
@@ -120,6 +135,8 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
                 observeTrackingPoints(latestRun.id)
             }
         }
+
+        emitMessage("Route ${route.name} staat klaar.")
     }
 
     fun ensureRouteSelected(routes: List<Route>) {
@@ -154,6 +171,7 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
             _runStatus.value = run.status
             isTracking = true
             observeTrackingPoints(runId)
+            emitMessage("Route gestart. Tracking loopt.")
 
             val intent = Intent(getApplication(), TrackingService::class.java).apply {
                 action = TrackingService.ACTION_START
@@ -182,6 +200,13 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
             db.veegDao().updateRouteRun(updatedRun)
             _currentRun.value = updatedRun
             _runStatus.value = updatedRun.status
+            emitMessage(
+                if (completed) {
+                    "Route afgerond en opgeslagen."
+                } else {
+                    "Route gestopt. Controleer later de incomplete rit."
+                }
+            )
         }
 
         isTracking = false
@@ -269,4 +294,8 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun formattedDistance(): String = String.format(Locale.getDefault(), "%.1f km", _distanceKm.value)
+
+    private fun emitMessage(text: String) {
+        _events.tryEmit(UiEvent.Message(text))
+    }
 }

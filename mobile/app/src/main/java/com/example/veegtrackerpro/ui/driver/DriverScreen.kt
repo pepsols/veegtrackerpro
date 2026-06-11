@@ -7,6 +7,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,9 +35,12 @@ import androidx.compose.material.icons.filled.GpsNotFixed
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.NearMe
+import androidx.compose.material.icons.filled.PriorityHigh
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -75,6 +79,7 @@ import coil.compose.AsyncImage
 import com.example.veegtrackerpro.BuildConfig
 import com.example.veegtrackerpro.R
 import com.example.veegtrackerpro.data.local.entities.Route
+import com.example.veegtrackerpro.data.local.entities.RouteRun
 import com.example.veegtrackerpro.ui.components.VeegMap
 import org.osmdroid.util.GeoPoint
 import java.util.Locale
@@ -99,6 +104,34 @@ fun DriverScreen(
     var showRoutePicker by remember { mutableStateOf(false) }
     var pendingRouteStart by remember { mutableStateOf<Route?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val priority = remember(selectedRoute, runStatus, progress, coverage, viewModel.isTracking) {
+        driverPriorityState(
+            hasRoute = selectedRoute != null,
+            runStatus = runStatus,
+            isTracking = viewModel.isTracking,
+            progress = progress,
+            coverage = coverage
+        )
+    }
+    val nextStep = remember(selectedRoute, runStatus, viewModel.isTracking, currentInstruction) {
+        when {
+            selectedRoute == null -> "Selecteer eerst een route."
+            viewModel.isTracking && currentInstruction.isNotBlank() -> currentInstruction
+            viewModel.isTracking -> "Blijf de route volgen en werk richting volledige dekking."
+            runStatus == RouteRun.STATUS_INCOMPLETE -> "Hervat of controleer deze route voordat je afsluit."
+            runStatus == RouteRun.STATUS_COMPLETED -> "Kies de volgende route voor vandaag."
+            else -> "Start de route zodra je klaarstaat."
+        }
+    }
+    val blocker = remember(selectedRoute, allRoutes, runStatus, coverage) {
+        when {
+            allRoutes.isEmpty() -> "Nog geen routes geladen of geimporteerd."
+            selectedRoute == null -> "Er is nog geen route geselecteerd."
+            runStatus == RouteRun.STATUS_INCOMPLETE -> "Laatste rit is incompleet en vraagt controle."
+            coverage < 60 && runStatus == RouteRun.STATUS_IN_PROGRESS -> "Dekking is nog laag; volg de route nauwkeuriger."
+            else -> "Geen blokkades."
+        }
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -123,6 +156,14 @@ fun DriverScreen(
             snackbarHostState.showSnackbar("Nog geen routes geladen.")
         } else {
             showRoutePicker = true
+        }
+    }
+
+    LaunchedEffect(viewModel) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is DriverViewModel.UiEvent.Message -> snackbarHostState.showSnackbar(event.text)
+            }
         }
     }
 
@@ -192,31 +233,56 @@ fun DriverScreen(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(bottom = 32.dp, start = 16.dp)
-                .width(188.dp),
+                .width(250.dp),
             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(18.dp)
         ) {
-            Column(modifier = Modifier.padding(12.dp)) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = "Vandaag",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
                 Text(
                     text = selectedRoute?.name ?: "Geen route",
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                PriorityChip(priority = priority)
                 Text(
-                    text = stringResource(R.string.label_route_progress, progress),
-                    style = MaterialTheme.typography.labelLarge
+                    text = "Volgende stap",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Text("Dekking: $coverage%", style = MaterialTheme.typography.bodySmall)
-                Text("Afstand: ${String.format("%.1f", distanceKm)} km", style = MaterialTheme.typography.bodySmall)
-                Text("Status: ${runStatus.replace('_', ' ')}", style = MaterialTheme.typography.bodySmall)
-                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = nextStep,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "Blokkade: $blocker",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (blocker == "Geen blokkades.") MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.error
+                )
                 LinearProgressIndicator(
                     progress = { progress / 100f },
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.primaryContainer
                 )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TodayStatChip(label = "Voortgang", value = "$progress%")
+                    TodayStatChip(label = "Dekking", value = "$coverage%")
+                    TodayStatChip(label = "Afstand", value = String.format("%.1f km", distanceKm))
+                    TodayStatChip(label = "Status", value = runStatus.replace('_', ' '))
+                }
             }
         }
 
@@ -259,6 +325,42 @@ fun DriverScreen(
                 text = if (viewModel.isTracking) stringResource(R.string.label_stop_route) else stringResource(R.string.label_draw),
                 style = MaterialTheme.typography.titleLarge
             )
+        }
+
+        if (selectedRoute != null && !viewModel.isTracking && progress > 0) {
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 108.dp)
+                    .width(280.dp),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
+                shape = RoundedCornerShape(18.dp),
+                shadowElevation = 8.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = if (runStatus == RouteRun.STATUS_COMPLETED) "Route afgerond" else "Laatste route samenvatting",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = "Voortgang $progress% • Dekking $coverage% • ${String.format("%.1f", distanceKm)} km",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = if (runStatus == RouteRun.STATUS_COMPLETED) {
+                            "Kies direct je volgende route om door te werken."
+                        } else {
+                            "Start opnieuw om deze route af te maken of controleer later de incomplete rit."
+                        },
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
         }
 
         if (showRoutePicker) {
@@ -384,6 +486,65 @@ fun DriverScreen(
                 snackbarHostState.currentSnackbarData?.dismiss()
             }
         }
+    }
+}
+
+private data class DriverPriorityState(
+    val label: String,
+    val containerColor: Color,
+    val contentColor: Color
+)
+
+private fun driverPriorityState(
+    hasRoute: Boolean,
+    runStatus: String,
+    isTracking: Boolean,
+    progress: Int,
+    coverage: Int
+): DriverPriorityState {
+    return when {
+        !hasRoute -> DriverPriorityState("Nu: route kiezen", Color(0xFFFFE5DB), Color(0xFFB44721))
+        isTracking -> DriverPriorityState("Nu bezig", Color(0xFFDFF4EF), Color(0xFF0A6B59))
+        runStatus == RouteRun.STATUS_INCOMPLETE -> DriverPriorityState("Controle nodig", Color(0xFFFFE5DB), Color(0xFFB44721))
+        runStatus == RouteRun.STATUS_COMPLETED -> DriverPriorityState("Klaar voor volgende", Color(0xFFE8EDF1), Color(0xFF52616D))
+        progress > 0 || coverage > 0 -> DriverPriorityState("Hervatten", Color(0xFFFFF0D5), Color(0xFFB06200))
+        else -> DriverPriorityState("Gepland", Color(0xFFE8EDF1), Color(0xFF52616D))
+    }
+}
+
+@Composable
+private fun PriorityChip(priority: DriverPriorityState) {
+    AssistChip(
+        onClick = {},
+        enabled = false,
+        label = { Text(priority.label) },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.PriorityHigh,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+        },
+        colors = AssistChipDefaults.assistChipColors(
+            disabledContainerColor = priority.containerColor,
+            disabledLabelColor = priority.contentColor,
+            disabledLeadingIconContentColor = priority.contentColor
+        )
+    )
+}
+
+@Composable
+private fun TodayStatChip(label: String, value: String) {
+    Surface(
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        shape = RoundedCornerShape(999.dp)
+    ) {
+        Text(
+            text = "$label: $value",
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSecondaryContainer
+        )
     }
 }
 

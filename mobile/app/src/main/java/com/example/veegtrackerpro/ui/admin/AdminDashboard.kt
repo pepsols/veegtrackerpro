@@ -71,6 +71,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -82,6 +83,7 @@ import com.example.veegtrackerpro.data.local.entities.RouteRun
 import com.example.veegtrackerpro.ui.components.VeegMap
 import kotlinx.coroutines.launch
 import org.osmdroid.util.GeoPoint
+import java.net.URLEncoder
 import java.util.Date
 import java.util.Locale
 
@@ -99,6 +101,7 @@ fun AdminDashboard(
     val trackingPoints by viewModel.trackingPoints.collectAsState()
     val routeRuns by viewModel.routeRuns.collectAsState()
     val pois by viewModel.pois.collectAsState()
+    val allPoisByRouteId by viewModel.allPoisByRouteId.collectAsState()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -121,6 +124,7 @@ fun AdminDashboard(
         listPane = {
             RouteListPane(
                 routes = routes,
+                poisByRouteId = allPoisByRouteId,
                 selectedRouteId = selectedRoute?.id ?: -1,
                 onRouteSelected = { route ->
                     viewModel.selectRoute(route)
@@ -170,6 +174,7 @@ fun AdminDashboard(
 @Composable
 fun RouteListPane(
     routes: List<Route>,
+    poisByRouteId: Map<Long, List<Poi>>,
     selectedRouteId: Long,
     onRouteSelected: (Route) -> Unit,
     onImportGpx: () -> Unit,
@@ -223,11 +228,12 @@ fun RouteListPane(
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(routes) { route ->
                     val isSelected = route.id == selectedRouteId
-                    val routeThumbnailUrl = remember(route.id, route.gpxData) {
+                    val routePois = poisByRouteId[route.id].orEmpty()
+                    val routeThumbnailUrl = remember(route.id, route.gpxData, routePois) {
                         buildRoutePreviewUrl(
                             route = route,
                             routePoints = emptyList(),
-                            pois = emptyList()
+                            pois = routePois
                         )
                     }
                     ListItem(
@@ -239,7 +245,11 @@ fun RouteListPane(
                                 .getBestDateTimePattern(locale, "ddMMyyyy")
                                 .let { pattern -> java.text.SimpleDateFormat(pattern, locale) }
                                 .format(Date(route.createdAt))
-                            Text(date)
+                            Text(
+                                text = if (routePois.isEmpty()) date else "$date • ${routePois.size} markers",
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         },
                         leadingContent = {
                             Box(
@@ -592,31 +602,26 @@ private fun buildRoutePreviewUrl(
     routePoints: List<GeoPoint>,
     pois: List<Poi>
 ): String? {
-    val firstPoint = when {
-        routePoints.isNotEmpty() -> routePoints.first()
-        else -> extractFirstPreviewPoint(route.gpxData) ?: pois.firstOrNull()?.let {
-            GeoPoint(it.latitude, it.longitude)
-        } ?: return null
+    val previewPoints = buildList {
+        addAll(routePoints)
+        extractFirstPreviewPoint(route.gpxData)?.let(::add)
+        pois.forEach { add(GeoPoint(it.latitude, it.longitude)) }
     }
+    val centerPoint = previewPoints.firstOrNull() ?: return null
 
-    if (BuildConfig.MAPS_API_KEY.isNotBlank()) {
-        return String.format(
-            Locale.US,
-            "https://maps.googleapis.com/maps/api/streetview?size=640x360&location=%.6f,%.6f&fov=90&heading=0&pitch=0&source=outdoor&key=%s",
-            firstPoint.latitude,
-            firstPoint.longitude,
-            BuildConfig.MAPS_API_KEY
+    return if (BuildConfig.MAPS_API_KEY.isNotBlank()) {
+        buildGoogleStaticMapUrl(
+            center = centerPoint,
+            routePoints = routePoints,
+            pois = pois
+        )
+    } else {
+        buildOpenStreetMapPreviewUrl(
+            center = centerPoint,
+            routePoints = routePoints,
+            pois = pois
         )
     }
-
-    return String.format(
-        Locale.US,
-        "https://staticmap.openstreetmap.de/staticmap.php?center=%.6f,%.6f&zoom=17&size=640x360&markers=%.6f,%.6f,red-pushpin",
-        firstPoint.latitude,
-        firstPoint.longitude,
-        firstPoint.latitude,
-        firstPoint.longitude
-    )
 }
 
 private fun extractFirstPreviewPoint(gpxData: String): GeoPoint? {
@@ -628,3 +633,74 @@ private fun extractFirstPreviewPoint(gpxData: String): GeoPoint? {
     val lon = match.groupValues.getOrNull(3)?.toDoubleOrNull() ?: return null
     return GeoPoint(lat, lon)
 }
+
+private fun buildGoogleStaticMapUrl(
+    center: GeoPoint,
+    routePoints: List<GeoPoint>,
+    pois: List<Poi>
+): String {
+    val params = mutableListOf(
+        "center=${formatPoint(center)}",
+        "zoom=16",
+        "size=640x360",
+        "scale=2",
+        "maptype=roadmap"
+    )
+
+    if (routePoints.size > 1) {
+        val path = routePoints
+            .take(40)
+            .joinToString("|") { formatPoint(it) }
+        params += "path=${encode("color:0x2E7D32FF|weight:5|$path")}"
+    }
+
+    if (pois.isNotEmpty()) {
+        pois.take(20).forEachIndexed { index, poi ->
+            val label = ((index % 26) + 'A'.code).toChar()
+            val marker = "color:red|label:$label|${formatLatLon(poi.latitude, poi.longitude)}"
+            params += "markers=${encode(marker)}"
+        }
+    } else {
+        params += "markers=${encode("color:blue|${formatPoint(center)}")}"
+    }
+
+    params += "key=${encode(BuildConfig.MAPS_API_KEY)}"
+    return "https://maps.googleapis.com/maps/api/staticmap?${params.joinToString("&")}"
+}
+
+private fun buildOpenStreetMapPreviewUrl(
+    center: GeoPoint,
+    routePoints: List<GeoPoint>,
+    pois: List<Poi>
+): String {
+    val params = mutableListOf(
+        "center=${formatPoint(center)}",
+        "zoom=16",
+        "size=640x360"
+    )
+
+    val markerParams = if (pois.isNotEmpty()) {
+        pois.take(20).joinToString("&") { poi ->
+            "markers=${formatLatLon(poi.latitude, poi.longitude)},red-pushpin"
+        }
+    } else {
+        "markers=${formatPoint(center)},blue-pushpin"
+    }
+    params += markerParams
+
+    if (routePoints.size > 1) {
+        val path = routePoints
+            .take(80)
+            .joinToString("|") { formatPoint(it) }
+        params += "path=${encode("color:0x2E7D32|weight:4|$path")}"
+    }
+
+    return "https://staticmap.openstreetmap.de/staticmap.php?${params.joinToString("&")}"
+}
+
+private fun formatPoint(point: GeoPoint): String = formatLatLon(point.latitude, point.longitude)
+
+private fun formatLatLon(latitude: Double, longitude: Double): String =
+    String.format(Locale.US, "%.6f,%.6f", latitude, longitude)
+
+private fun encode(value: String): String = URLEncoder.encode(value, Charsets.UTF_8.name())
