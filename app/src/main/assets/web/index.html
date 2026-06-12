@@ -4,105 +4,1235 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Veegtracker Pro - Cloud Dashboard</title>
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <style>
-        :root { --primary: #1a237e; --secondary: #c51162; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; height: 100vh; background: var(--bg); color: #333; }
+        :root {
+            --bg: #f4efe6;
+            --panel: rgba(255, 251, 245, 0.94);
+            --panel-strong: #fffdf9;
+            --line: #d7c4aa;
+            --text: #1f2c21;
+            --muted: #667161;
+            --primary: #234f3f;
+            --primary-soft: #e4f0e7;
+            --accent: #d56a34;
+            --accent-soft: #fce9de;
+            --warning: #b95027;
+            --warning-soft: #f8dfd3;
+            --info: #4f7ca8;
+            --info-soft: #e4eef8;
+            --success: #2d7d4f;
+            --shadow: 0 22px 55px rgba(70, 52, 24, 0.12);
+            --radius-xl: 28px;
+            --radius-lg: 22px;
+            --radius-md: 16px;
+            --radius-sm: 12px;
+        }
 
-        /* Sidebar */
-        #sidebar { width: 380px; background: white; border-right: 1px solid #ddd; display: flex; flex-direction: column; box-shadow: 2px 0 10px rgba(0,0,0,0.1); z-index: 1000; }
-        #header { padding: 25px; background: var(--primary); color: white; }
-        .tabs { display: flex; background: #eee; border-bottom: 1px solid #ddd; }
-        .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; font-size: 14px; font-weight: bold; color: #666; transition: 0.3s; }
-        .tab.active { background: white; color: var(--primary); border-top: 3px solid var(--primary); }
+        * {
+            box-sizing: border-box;
+        }
 
-        .content-area { flex: 1; overflow-y: auto; }
-        .list-item { padding: 15px 20px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s; position: relative; }
-        .list-item:hover { background: #f0f4ff; }
-        .item-title { font-weight: bold; display: block; margin-bottom: 4px; }
-        .item-sub { font-size: 12px; color: #888; }
-        .status-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; color: white; position: absolute; right: 20px; top: 20px; }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(255, 255, 255, 0.72), transparent 32%),
+                linear-gradient(180deg, #f7f2eb 0%, #efe6d9 100%);
+        }
 
-        /* Stats Bar */
-        #stats-bar { display: flex; padding: 15px; background: #fff; gap: 10px; border-bottom: 1px solid #ddd; }
-        .stat-card { flex: 1; padding: 10px; background: var(--bg); border-radius: 8px; text-align: center; border: 1px solid #eee; }
-        .stat-val { display: block; font-size: 20px; font-weight: bold; color: var(--primary); }
-        .stat-lbl { font-size: 10px; text-transform: uppercase; color: #888; }
+        button,
+        input,
+        textarea,
+        select {
+            font: inherit;
+        }
 
-        /* Map & Overlay */
-        #map-container { flex: 1; position: relative; }
-        #map { height: 100%; width: 100%; }
+        .app-shell {
+            min-height: 100vh;
+            padding: 24px;
+        }
 
-        .floating-action { position: absolute; bottom: 30px; left: 30px; z-index: 1001; }
-        #btn-new-task { background: var(--secondary); color: white; border: none; padding: 15px 25px; border-radius: 30px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .layout-shell {
+            max-width: 1760px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 280px minmax(0, 1fr);
+            gap: 18px;
+            align-items: start;
+        }
 
-        /* Details Overlay */
-        #details { position: absolute; top: 20px; right: 20px; width: 320px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 1000; display: none; }
-        .close-btn { position: absolute; right: 15px; top: 15px; cursor: pointer; color: #aaa; }
+        .sidebar-nav {
+            position: sticky;
+            top: 24px;
+            background: var(--panel);
+            border: 1px solid rgba(215, 196, 170, 0.95);
+            box-shadow: var(--shadow);
+            border-radius: var(--radius-xl);
+            padding: 18px;
+            display: grid;
+            gap: 16px;
+        }
+
+        .sidebar-brand {
+            display: grid;
+            gap: 8px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(215, 196, 170, 0.8);
+        }
+
+        .sidebar-brand strong {
+            font-size: 22px;
+            line-height: 1.15;
+        }
+
+        .sidebar-brand span {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .nav-menu,
+        .mobile-nav-menu {
+            display: grid;
+            gap: 10px;
+        }
+
+        .nav-link,
+        .mobile-nav-link {
+            border: 1px solid rgba(35, 79, 63, 0.1);
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 12px 14px;
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        .nav-link span,
+        .mobile-nav-link span {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .nav-link:hover,
+        .mobile-nav-link:hover,
+        .nav-link.active,
+        .mobile-nav-link.active {
+            transform: translateY(-1px);
+            border-color: rgba(35, 79, 63, 0.35);
+            box-shadow: 0 10px 24px rgba(53, 43, 25, 0.08);
+            background: linear-gradient(180deg, #ffffff, #f3faf4);
+        }
+
+        .mobile-nav {
+            display: none;
+            background: var(--panel);
+            border: 1px solid rgba(215, 196, 170, 0.95);
+            box-shadow: var(--shadow);
+            border-radius: var(--radius-xl);
+            padding: 12px;
+            overflow-x: auto;
+        }
+
+        .mobile-nav-menu {
+            display: flex;
+            gap: 10px;
+            min-width: max-content;
+        }
+
+        .mobile-nav-link {
+            white-space: nowrap;
+        }
+
+        .dashboard {
+            display: grid;
+            gap: 18px;
+        }
+
+        .topbar,
+        .priority-strip,
+        .workspace,
+        .section-grid {
+            background: var(--panel);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(215, 196, 170, 0.95);
+            box-shadow: var(--shadow);
+        }
+
+        .topbar {
+            border-radius: var(--radius-xl);
+            padding: 24px 28px;
+            display: grid;
+            grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.9fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .brand-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(35, 79, 63, 0.1);
+            color: var(--primary);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .brand-title {
+            margin: 14px 0 10px;
+            font-size: clamp(2rem, 3vw, 3.2rem);
+            line-height: 1.05;
+        }
+
+        .brand-copy {
+            margin: 0;
+            max-width: 720px;
+            color: var(--muted);
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .topbar-side {
+            display: grid;
+            gap: 14px;
+        }
+
+        .status-row,
+        .filters-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .status-chip,
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--text);
+        }
+
+        .status-chip strong,
+        .filter-chip strong {
+            font-size: 13px;
+        }
+
+        .status-chip span,
+        .filter-chip span {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .filter-chip select {
+            border: none;
+            background: transparent;
+            color: var(--text);
+            font-weight: 600;
+            outline: none;
+            min-width: 120px;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .primary-btn,
+        .secondary-btn,
+        .danger-btn {
+            border: none;
+            cursor: pointer;
+            border-radius: 999px;
+            padding: 14px 20px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+        }
+
+        .primary-btn:hover,
+        .secondary-btn:hover,
+        .danger-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .primary-btn {
+            background: linear-gradient(135deg, var(--accent), #e0854e);
+            color: #fff;
+            box-shadow: 0 16px 28px rgba(213, 106, 52, 0.24);
+        }
+
+        .secondary-btn {
+            background: #fff;
+            color: var(--primary);
+            border: 1px solid rgba(35, 79, 63, 0.2);
+        }
+
+        .danger-btn {
+            background: #fff4f0;
+            color: var(--warning);
+            border: 1px solid rgba(185, 80, 39, 0.2);
+        }
+
+        .priority-strip {
+            border-radius: var(--radius-xl);
+            padding: 18px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .priority-card {
+            min-height: 140px;
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            border: 1px solid var(--line);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(245, 237, 225, 0.95));
+            display: grid;
+            gap: 10px;
+        }
+
+        .priority-card .eyebrow {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .priority-card .value {
+            font-size: 2.1rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .priority-card .meta {
+            color: var(--muted);
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .priority-card.alert {
+            background: linear-gradient(180deg, #fff9f4, #fbe8df);
+            border-color: rgba(213, 106, 52, 0.4);
+        }
+
+        .priority-card.warning {
+            background: linear-gradient(180deg, #fff8f5, #f7e3d6);
+            border-color: rgba(185, 80, 39, 0.34);
+        }
+
+        .priority-card.info {
+            background: linear-gradient(180deg, #f7fbff, #e7f1fa);
+            border-color: rgba(79, 124, 168, 0.3);
+        }
+
+        .priority-card.success {
+            background: linear-gradient(180deg, #fbfff7, #ebf6ec);
+            border-color: rgba(45, 125, 79, 0.24);
+        }
+
+        .workspace {
+            border-radius: var(--radius-xl);
+            padding: 18px;
+            display: grid;
+            grid-template-columns: minmax(0, 1.65fr) minmax(320px, 0.8fr);
+            gap: 18px;
+            min-height: 620px;
+        }
+
+        .map-panel,
+        .context-panel,
+        .section-card {
+            background: var(--panel-strong);
+            border: 1px solid rgba(215, 196, 170, 0.95);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .map-panel {
+            display: grid;
+            grid-template-rows: auto auto minmax(420px, 1fr);
+        }
+
+        .panel-head {
+            padding: 20px 22px 12px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .panel-head h2,
+        .panel-head h3 {
+            margin: 0;
+            font-size: 1.45rem;
+        }
+
+        .panel-copy {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .map-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 0 22px 16px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid var(--line);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .pill strong {
+            color: var(--primary);
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 420px;
+        }
+
+        .context-panel {
+            display: grid;
+            grid-template-rows: auto auto 1fr;
+        }
+
+        .context-summary {
+            padding: 20px 22px 0;
+            display: grid;
+            gap: 12px;
+        }
+
+        .context-highlight {
+            border-radius: var(--radius-md);
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(35, 79, 63, 0.1), rgba(35, 79, 63, 0.04));
+            border: 1px solid rgba(35, 79, 63, 0.14);
+        }
+
+        .context-highlight strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+
+        .context-highlight p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .context-details {
+            padding: 16px 22px 22px;
+            overflow-y: auto;
+            display: grid;
+            gap: 14px;
+        }
+
+        .detail-card {
+            border-radius: var(--radius-md);
+            border: 1px solid var(--line);
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.88);
+        }
+
+        .detail-card h4 {
+            margin: 0 0 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+        }
+
+        .detail-list {
+            display: grid;
+            gap: 8px;
+            margin: 0;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed rgba(215, 196, 170, 0.8);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .detail-label {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .detail-value {
+            text-align: right;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .context-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .section-grid {
+            border-radius: var(--radius-xl);
+            padding: 18px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .section-card {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            min-height: 360px;
+        }
+
+        .section-body {
+            padding: 0 18px 18px;
+            display: grid;
+            gap: 12px;
+            align-content: start;
+        }
+
+        .item-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .list-item {
+            border: 1px solid var(--line);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.92);
+            display: grid;
+            gap: 8px;
+            cursor: pointer;
+            transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        .list-item:hover {
+            transform: translateY(-1px);
+            border-color: rgba(35, 79, 63, 0.35);
+            box-shadow: 0 10px 24px rgba(53, 43, 25, 0.08);
+        }
+
+        .list-item.active {
+            border-color: rgba(35, 79, 63, 0.55);
+            box-shadow: inset 0 0 0 1px rgba(35, 79, 63, 0.16);
+            background: linear-gradient(180deg, #ffffff, #f5faf6);
+        }
+
+        .item-layout {
+            display: grid;
+            grid-template-columns: 96px minmax(0, 1fr);
+            gap: 12px;
+            align-items: start;
+        }
+
+        .preview-frame {
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid rgba(215, 196, 170, 0.95);
+            background: linear-gradient(180deg, #f7f2ea, #f0e7db);
+            aspect-ratio: 1.2 / 1;
+        }
+
+        .preview-frame img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-frame.large {
+            aspect-ratio: 1.5 / 1;
+        }
+
+        .item-main {
+            min-width: 0;
+            display: grid;
+            gap: 8px;
+        }
+
+        .item-topline {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .item-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .item-sub {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .item-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            background: var(--primary-soft);
+            color: var(--primary);
+        }
+
+        .badge.warning {
+            background: var(--warning-soft);
+            color: var(--warning);
+        }
+
+        .badge.accent {
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .badge.info {
+            background: var(--info-soft);
+            color: var(--info);
+        }
+
+        .badge.success {
+            background: #e7f5eb;
+            color: var(--success);
+        }
+
+        .empty-state {
+            min-height: 180px;
+            border: 1px dashed rgba(215, 196, 170, 0.95);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            background: rgba(247, 240, 230, 0.55);
+            color: var(--muted);
+            display: grid;
+            align-content: center;
+            gap: 10px;
+            text-align: left;
+        }
+
+        .empty-state strong {
+            color: var(--text);
+            font-size: 16px;
+        }
+
+        .dialog-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(29, 22, 11, 0.38);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            z-index: 4000;
+        }
+
+        .dialog-backdrop.open {
+            display: flex;
+        }
+
+        .dialog {
+            width: min(540px, 100%);
+            background: #fffdf9;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 30px 60px rgba(42, 29, 12, 0.24);
+            overflow: hidden;
+        }
+
+        .dialog-header,
+        .dialog-body,
+        .dialog-actions {
+            padding: 20px 22px;
+        }
+
+        .dialog-header {
+            border-bottom: 1px solid rgba(215, 196, 170, 0.9);
+        }
+
+        .dialog-header h3 {
+            margin: 0 0 8px;
+            font-size: 1.35rem;
+        }
+
+        .dialog-header p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        .field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .field label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .field input,
+        .field textarea,
+        .field select {
+            width: 100%;
+            border: 1px solid rgba(215, 196, 170, 0.95);
+            border-radius: var(--radius-sm);
+            padding: 13px 14px;
+            background: #fff;
+            color: var(--text);
+            outline: none;
+        }
+
+        .field textarea {
+            resize: vertical;
+            min-height: 110px;
+        }
+
+        .dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid rgba(215, 196, 170, 0.9);
+        }
+
+        .toast {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            z-index: 4200;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(31, 44, 33, 0.96);
+            color: #fff;
+            box-shadow: 0 20px 40px rgba(31, 44, 33, 0.28);
+        }
+
+        .toast.visible {
+            display: inline-flex;
+        }
+
+        .map-popup-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(29, 22, 11, 0.42);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            z-index: 4100;
+        }
+
+        .map-popup-backdrop.open {
+            display: flex;
+        }
+
+        .map-popup-card {
+            width: min(760px, 100%);
+            background: #fffdf9;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 30px 60px rgba(42, 29, 12, 0.24);
+            overflow: hidden;
+        }
+
+        .map-popup-header,
+        .map-popup-body,
+        .map-popup-actions {
+            padding: 20px 22px;
+        }
+
+        .map-popup-header {
+            border-bottom: 1px solid rgba(215, 196, 170, 0.9);
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: start;
+        }
+
+        .map-popup-header h3 {
+            margin: 0 0 6px;
+            font-size: 1.4rem;
+        }
+
+        .map-popup-header p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .icon-btn {
+            border: none;
+            background: rgba(35, 79, 63, 0.08);
+            color: var(--primary);
+            width: 38px;
+            height: 38px;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+
+        .map-popup-body {
+            display: grid;
+            gap: 18px;
+        }
+
+        .popup-grid {
+            display: grid;
+            grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.1fr);
+            gap: 18px;
+            align-items: start;
+        }
+
+        .map-popup-actions {
+            border-top: 1px solid rgba(215, 196, 170, 0.9);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 1260px) {
+            .layout-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar-nav {
+                display: none;
+            }
+
+            .mobile-nav {
+                display: block;
+            }
+
+            .topbar,
+            .workspace,
+            .popup-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .status-row,
+            .filters-row,
+            .hero-actions {
+                justify-content: flex-start;
+            }
+
+            .priority-strip {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .section-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 860px) {
+            .app-shell {
+                padding: 14px;
+            }
+
+            .item-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar,
+            .workspace,
+            .priority-strip,
+            .section-grid {
+                padding: 14px;
+            }
+
+            .priority-strip {
+                grid-template-columns: 1fr;
+            }
+
+            .map-panel {
+                grid-template-rows: auto auto minmax(340px, 1fr);
+            }
+
+            .context-panel {
+                min-height: 0;
+            }
+
+            .panel-head,
+            .context-summary,
+            .context-details,
+            .section-body {
+                padding-left: 14px;
+                padding-right: 14px;
+            }
+
+            .map-toolbar {
+                padding-left: 14px;
+                padding-right: 14px;
+            }
+
+            .dialog-actions {
+                flex-direction: column-reverse;
+            }
+
+            .dialog-actions button {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .map-popup-actions {
+                flex-direction: column-reverse;
+            }
+
+            .map-popup-actions button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
-    <div id="sidebar">
-        <div id="header">
-            <h2 style="margin:0"><i class="fas fa-truck-pickup"></i> Veegtracker Pro</h2>
-            <p style="margin:5px 0 0; opacity:0.8; font-size: 14px;">Centrale Meldkamer Live</p>
-        </div>
+    <div class="app-shell">
+        <div class="layout-shell">
+            <aside class="sidebar-nav">
+                <div class="sidebar-brand">
+                    <strong>Veegtracker Pro</strong>
+                    <span>Desktopnavigatie voor routes, meldingen, planning en uitzonderingen.</span>
+                </div>
+                <nav class="nav-menu" id="desktop-menu">
+                    <button class="nav-link active" data-scroll-target="section-overview" type="button">
+                        <i class="fas fa-grip"></i>
+                        <div>Overzicht<br><span>KPI's en live status</span></div>
+                    </button>
+                    <button class="nav-link" data-scroll-target="section-map" type="button">
+                        <i class="fas fa-map"></i>
+                        <div>Kaart<br><span>Routes en punten</span></div>
+                    </button>
+                    <button class="nav-link" data-scroll-target="section-routes" type="button">
+                        <i class="fas fa-route"></i>
+                        <div>Routes<br><span>Routeoverzicht</span></div>
+                    </button>
+                    <button class="nav-link" data-scroll-target="section-planning" type="button">
+                        <i class="fas fa-list-check"></i>
+                        <div>Planning<br><span>Taken en AI</span></div>
+                    </button>
+                    <button class="nav-link" data-scroll-target="section-exceptions" type="button">
+                        <i class="fas fa-triangle-exclamation"></i>
+                        <div>Meldingen<br><span>Uitzonderingen</span></div>
+                    </button>
+                </nav>
+            </aside>
 
-        <div id="stats-bar">
-            <div class="stat-card">
-                <span class="stat-val" id="stat-routes">0</span>
-                <span class="stat-lbl">Routes</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-val" id="stat-pois">0</span>
-                <span class="stat-lbl">Meldingen</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-val" id="stat-tasks">0</span>
-                <span class="stat-lbl">Taken</span>
-            </div>
-        </div>
+            <div class="dashboard">
+            <section class="mobile-nav">
+                <div class="mobile-nav-menu" id="mobile-menu">
+                    <button class="mobile-nav-link active" data-scroll-target="section-overview" type="button">Overzicht</button>
+                    <button class="mobile-nav-link" data-scroll-target="section-map" type="button">Kaart</button>
+                    <button class="mobile-nav-link" data-scroll-target="section-routes" type="button">Routes</button>
+                    <button class="mobile-nav-link" data-scroll-target="section-planning" type="button">Planning</button>
+                    <button class="mobile-nav-link" data-scroll-target="section-exceptions" type="button">Meldingen</button>
+                </div>
+            </section>
 
-        <div class="tabs">
-            <div class="tab active" onclick="switchTab('routes')">ROUTES</div>
-            <div class="tab" onclick="switchTab('pois')">MELDINGEN</div>
-            <div class="tab" onclick="switchTab('tasks')">TAKEN</div>
-            <div class="tab" onclick="switchTab('ai')" style="color:var(--secondary)"><i class="fas fa-robot"></i> AI AGENT</div>
-        </div>
+            <div id="section-overview"></div>
+            <section class="topbar">
+                <div>
+                    <div class="brand-kicker">
+                        <i class="fas fa-tower-broadcast"></i>
+                        <span>Centrale meldkamer live</span>
+                    </div>
+                    <h1 class="brand-title">Veegtracker Pro dashboard voor planning, operatie en opvolging</h1>
+                    <p class="brand-copy">
+                        Dit dashboard laat je actuele routes, meldingen en taken in een vaste werkindeling zien.
+                        Ontworpen voor tablet en pc: kaart links, context rechts en daaronder directe lijsten uit je eigen Firestore-data.
+                    </p>
+                </div>
+                <div class="topbar-side">
+                    <div class="status-row">
+                        <div class="status-chip">
+                            <i class="fas fa-circle" style="color:#2d7d4f"></i>
+                            <strong>Sync</strong>
+                            <span id="sync-status">Live verbonden</span>
+                        </div>
+                        <div class="status-chip">
+                            <i class="fas fa-clock"></i>
+                            <strong>Laatste update</strong>
+                            <span id="last-update">Nog geen data</span>
+                        </div>
+                    </div>
+                    <div class="filters-row">
+                        <div class="filter-chip">
+                            <i class="fas fa-layer-group"></i>
+                            <strong>Gebied</strong>
+                            <select id="area-filter">
+                                <option value="all">Alle gebieden</option>
+                            </select>
+                        </div>
+                        <div class="filter-chip">
+                            <i class="fas fa-bolt"></i>
+                            <strong>Status</strong>
+                            <select id="status-filter">
+                                <option value="all">Alles</option>
+                                <option value="open">Open</option>
+                                <option value="closed">Afgerond</option>
+                                <option value="weed">Onkruid</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="hero-actions">
+                        <button class="primary-btn" id="btn-new-task" type="button">
+                            <i class="fas fa-plus"></i>
+                            <span>Nieuwe taak</span>
+                        </button>
+                        <button class="secondary-btn" id="btn-focus-latest" type="button">
+                            <i class="fas fa-crosshairs"></i>
+                            <span>Focus laatste melding</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
 
-        <div class="content-area" id="list-container">
-            <!-- Dynamic Content -->
+            <section class="priority-strip">
+                <article class="priority-card alert">
+                    <span class="eyebrow">Nu actie</span>
+                    <span class="value" id="prio-open-tasks">0</span>
+                    <div class="meta" id="prio-open-tasks-meta">Open taken wachten op opvolging.</div>
+                </article>
+                <article class="priority-card warning">
+                    <span class="eyebrow">Controle</span>
+                    <span class="value" id="prio-urgent-pois">0</span>
+                    <div class="meta" id="prio-urgent-pois-meta">Nieuwe meldingen vragen beoordeling.</div>
+                </article>
+                <article class="priority-card info">
+                    <span class="eyebrow">Operatie</span>
+                    <span class="value" id="prio-routes">0</span>
+                    <div class="meta" id="prio-routes-meta">Beschikbare routes in je dataset.</div>
+                </article>
+                <article class="priority-card success">
+                    <span class="eyebrow">AI / planning</span>
+                    <span class="value" id="prio-ai">0</span>
+                    <div class="meta" id="prio-ai-meta">Aanbevelingen op basis van je meldingen.</div>
+                </article>
+            </section>
+
+            <div id="section-map"></div>
+            <section class="workspace">
+                <article class="map-panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2>Live kaart</h2>
+                            <p class="panel-copy">Kaart met meldingen uit Firestore en snelle focus op afwijkingen in het veld.</p>
+                        </div>
+                    </div>
+                    <div class="map-toolbar">
+                        <div class="pill">
+                            <i class="fas fa-route"></i>
+                            <span>Routes <strong id="map-routes">0</strong></span>
+                        </div>
+                        <div class="pill">
+                            <i class="fas fa-location-dot"></i>
+                            <span>Meldingen <strong id="map-pois">0</strong></span>
+                        </div>
+                        <div class="pill">
+                            <i class="fas fa-list-check"></i>
+                            <span>Taken <strong id="map-tasks">0</strong></span>
+                        </div>
+                        <div class="pill">
+                            <i class="fas fa-triangle-exclamation"></i>
+                            <span>Uitzonderingen <strong id="map-exceptions">0</strong></span>
+                        </div>
+                    </div>
+                    <div id="map"></div>
+                </article>
+
+                <aside class="context-panel">
+                    <div class="panel-head">
+                        <div>
+                            <h3>Contextpaneel</h3>
+                            <p class="panel-copy">Hier zie je details van de geselecteerde route, melding, taak of AI-voorstel.</p>
+                        </div>
+                    </div>
+                    <div class="context-summary">
+                        <div class="context-highlight">
+                            <strong id="context-title">Kies een item uit de lijsten</strong>
+                            <p id="context-summary">Selecteer hieronder een route, melding, taak of AI-aanbeveling om extra context en acties te zien.</p>
+                        </div>
+                    </div>
+                    <div class="context-details" id="context-details">
+                        <div class="empty-state">
+                            <strong>Geen selectie actief</strong>
+                            <span>Gebruik de panelen onder de kaart om je data direct te openen. Bij meldingen zoomt de kaart automatisch in.</span>
+                        </div>
+                    </div>
+                </aside>
+            </section>
+
+            <section class="section-grid">
+                <article class="section-card" id="section-routes">
+                    <div class="panel-head">
+                        <div>
+                            <h3>Operatie vandaag</h3>
+                            <p class="panel-copy">Routes en recente meldingen die operationeel relevant zijn.</p>
+                        </div>
+                    </div>
+                    <div class="section-body" id="operations-section"></div>
+                </article>
+
+                <article class="section-card" id="section-planning">
+                    <div class="panel-head">
+                        <div>
+                            <h3>Planning en taken</h3>
+                            <p class="panel-copy">Open werk, AI-voorstellen en directe opvolging vanuit je eigen data.</p>
+                        </div>
+                    </div>
+                    <div class="section-body" id="planning-section"></div>
+                </article>
+
+                <article class="section-card" id="section-exceptions">
+                    <div class="panel-head">
+                        <div>
+                            <h3>Uitzonderingen</h3>
+                            <p class="panel-copy">Items die nu aandacht vragen door leeftijd, urgentie of ontbrekende opvolging.</p>
+                        </div>
+                    </div>
+                    <div class="section-body" id="exceptions-section"></div>
+                </article>
+            </section>
+            </div>
         </div>
     </div>
 
-    <div id="map-container">
-        <div id="map"></div>
-
-        <div class="floating-action">
-            <button id="btn-new-task" onclick="showTaskDialog()">
-                <i class="fas fa-plus"></i> SNELLE TAAK MAKEN
-            </button>
-        </div>
-
-        <div id="details">
-            <span class="close-btn" onclick="hideDetails()">&times;</span>
-            <h3 id="det-name" style="margin-top:0">Details</h3>
-            <hr border="0" style="height:1px; background:#eee">
-            <div id="det-content">
-                <!-- Dynamic Details -->
+    <div class="dialog-backdrop" id="task-dialog">
+        <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="task-dialog-title">
+            <div class="dialog-header">
+                <h3 id="task-dialog-title">Nieuwe taak aanmaken</h3>
+                <p>Voeg een taak toe met omschrijving, status en bron. Deze wordt direct opgeslagen in Firestore.</p>
             </div>
+            <div class="dialog-body">
+                <form class="form-grid" id="task-form">
+                    <div class="field">
+                        <label for="task-name">Taaknaam</label>
+                        <input id="task-name" name="task-name" type="text" placeholder="Bijv. Controleer onkruidmelding Traaij" required />
+                    </div>
+                    <div class="field">
+                        <label for="task-status">Status</label>
+                        <select id="task-status" name="task-status">
+                            <option value="open">Open</option>
+                            <option value="planned">Gepland</option>
+                            <option value="closed">Afgerond</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="task-source">Bron</label>
+                        <select id="task-source" name="task-source">
+                            <option value="DASHBOARD">Dashboard</option>
+                            <option value="AI_AGENT">AI Agent</option>
+                            <option value="MANUAL">Handmatig</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="task-notes">Toelichting</label>
+                        <textarea id="task-notes" name="task-notes" placeholder="Optionele context, gebied of uitvoeropmerking"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="dialog-actions">
+                <button class="secondary-btn" id="btn-cancel-task" type="button">Annuleren</button>
+                <button class="primary-btn" id="btn-save-task" type="button">
+                    <i class="fas fa-floppy-disk"></i>
+                    <span>Taak opslaan</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <i class="fas fa-circle-check"></i>
+        <span id="toast-text">Opgeslagen</span>
+    </div>
+
+    <div class="map-popup-backdrop" id="map-popup">
+        <div class="map-popup-card">
+            <div class="map-popup-header">
+                <div>
+                    <h3 id="map-popup-title">Kaartdetail</h3>
+                    <p id="map-popup-summary">Detail van de geselecteerde route of melding.</p>
+                </div>
+                <button class="icon-btn" id="map-popup-close" type="button" aria-label="Sluiten">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="map-popup-body" id="map-popup-body"></div>
+            <div class="map-popup-actions" id="map-popup-actions"></div>
         </div>
     </div>
 
     <script>
-        // CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyDXUEaD1vkgpaIN2NYtXxkQrA_VcgcTnbU",
             authDomain: "veegtrackerpro-c03ae.firebaseapp.com",
@@ -115,165 +1245,1421 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let map = L.map('map').setView([52.0907, 5.1214], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        const map = L.map("map", { zoomControl: false }).setView([52.0907, 5.1214], 13);
+        L.control.zoom({ position: "bottomright" }).addTo(map);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "&copy; OpenStreetMap-bijdragers"
+        }).addTo(map);
 
-        let currentTab = 'routes';
-        let dataStore = { routes: [], pois: [], tasks: [], ai: [] };
+        const truckIcon = L.divIcon({
+            html: '<i class="fas fa-route fa-lg" style="color:#234f3f"></i>',
+            iconSize: [26, 26],
+            className: "map-icon"
+        });
+        const weedIcon = L.divIcon({
+            html: '<i class="fas fa-seedling fa-lg" style="color:#2d7d4f"></i>',
+            iconSize: [26, 26],
+            className: "map-icon"
+        });
+        const alertIcon = L.divIcon({
+            html: '<i class="fas fa-triangle-exclamation fa-lg" style="color:#b95027"></i>',
+            iconSize: [26, 26],
+            className: "map-icon"
+        });
+
+        const GPX_FILES = [
+            "2 Parels + fietspaden.gpx",
+            "DOORN.gpx",
+            "Fietspad en rijbaan.gpx",
+            "Korte dreef.gpx",
+            "markers 2026.gpx",
+            "Oranjevijver.gpx",
+            "Rosarium.gpx",
+            "Stationsplein.gpx",
+            "Traaij (deel1).gpx",
+            "Traaij (deel2).gpx"
+        ];
+
+        const GOOGLE_MAPS_STATIC_KEY = "AIzaSyDXUEaD1vkgpaIN2NYtXxkQrA_VcgcTnbU";
+
+        const MARKER_PHOTO_FILES = [
+            "10.Foto-s.061716.jpg",
+            "11.Foto-s.070508.jpg",
+            "12.Foto-s.064130.jpg",
+            "13.Foto-s.064949.jpg",
+            "14.Foto-s.065337.jpg",
+            "15.Foto-s.065601.jpg",
+            "17.Foto-s.065950.jpg",
+            "18.Foto-s.070743.jpg",
+            "19.Foto-s.070911.jpg",
+            "2.Foto-s.040148.jpg",
+            "20.Foto-s.071050.jpg",
+            "21.Foto-s.071156.jpg",
+            "22.Foto-s.071412.jpg",
+            "23.Foto-s.071618.jpg",
+            "25.Foto-s.071804.jpg",
+            "26.Foto-s.072416.jpg",
+            "3.Foto-s.032351.jpg",
+            "4.Foto-s.033630.jpg",
+            "4.Foto-s.043428.jpg",
+            "5.Foto-s.043559.jpg",
+            "7.Foto-s.050119.jpg",
+            "9.Foto-s.055838.jpg",
+            "N225 N227.Foto 2 (link).205056.jpg",
+            "N225 N227.Foto 2 (link).205056(1).jpg",
+            "N225 N227.Foto 2 (link).205056(2).jpg",
+            "Rijsenburgselaan 1.Foto 1 (link).145202.jpg",
+            "Rijsenburgselaan 1.Foto 1 (link).145202(1).jpg",
+            "Rijsenburgselaan 1.Foto 1 (link).145202(2).jpg",
+            "Rijsenburgselaan 2.Foto 1 (link).145253.jpg",
+            "Rijsenburgselaan 2.Foto 1 (link).145253(1).jpg",
+            "Rijsenburgselaan 2.Foto 1 (link).145253(2).jpg",
+            "Rijsenburgselaan 3.Foto 1 (link).145316.jpg",
+            "Rijsenburgselaan 3.Foto 1 (link).145316(1).jpg",
+            "Rijsenburgselaan 3.Foto 1 (link).145316(2).jpg",
+            "Rijsenburgselaan 4.Foto 1 (link).145338.jpg",
+            "Rijsenburgselaan 4.Foto 1 (link).145338(1).jpg",
+            "Rijsenburgselaan 4.Foto 1 (link).145338(2).jpg",
+            "Rijsenburgselaan 5.Foto 1 (link).145414.jpg",
+            "Rijsenburgselaan 5.Foto 1 (link).145414(1).jpg",
+            "Rijsenburgselaan 5.Foto 1 (link).145414(2).jpg",
+            "Rijsenburgselaan.Foto 1 (link).144315.jpg",
+            "Rijsenburgselaan.Foto 1 (link).144315(1).jpg",
+            "Rijsenburgselaan.Foto 1 (link).144315(2).jpg",
+            "Rijsenburgselaan.Foto 1 (link).145030.jpg",
+            "Rijsenburgselaan.Foto 1 (link).145030(1).jpg",
+            "Rijsenburgselaan.Foto 1 (link).145030(2).jpg",
+            "Rijsenburgselaan.Foto 1 (link).145050.jpg",
+            "Rijsenburgselaan.Foto 1 (link).145050(1).jpg",
+            "Rijsenburgselaan.Foto 1 (link).145050(2).jpg"
+        ];
+
+        const dataStore = {
+            cloudRoutes: [],
+            cloudPois: [],
+            gpxRoutes: [],
+            gpxPois: [],
+            tasks: [],
+            ai: []
+        };
+        let selectedItem = null;
         let markers = [];
+        let routeLayers = [];
+        let lastUpdateAt = null;
+        let activeFilters = { area: "all", status: "all" };
+        let toastTimer = null;
+        let activeScrollTarget = "section-overview";
 
-        // Icons
-        const truckIcon = L.divIcon({ html: '<i class="fas fa-truck-monster fa-2x" style="color:#1a237e"></i>', iconSize: [30, 30], className: 'map-icon' });
-        const weedIcon = L.divIcon({ html: '<i class="fas fa-seedling fa-2x" style="color:#2e7d32"></i>', iconSize: [30, 30], className: 'map-icon' });
-        const alertIcon = L.divIcon({ html: '<i class="fas fa-exclamation-triangle fa-2x" style="color:#c62828"></i>', iconSize: [30, 30], className: 'map-icon' });
+        const areaFilterEl = document.getElementById("area-filter");
+        const statusFilterEl = document.getElementById("status-filter");
+        const taskDialogEl = document.getElementById("task-dialog");
+        const taskFormEl = document.getElementById("task-form");
+        const mapPopupEl = document.getElementById("map-popup");
 
-        function switchTab(tab) {
-            currentTab = tab;
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            if (window.event) window.event.target.classList.add('active');
-            renderList();
+        areaFilterEl.addEventListener("change", () => {
+            activeFilters.area = areaFilterEl.value;
+            renderDashboard();
+        });
+
+        statusFilterEl.addEventListener("change", () => {
+            activeFilters.status = statusFilterEl.value;
+            renderDashboard();
+        });
+
+        document.getElementById("btn-new-task").addEventListener("click", openTaskDialog);
+        document.getElementById("btn-cancel-task").addEventListener("click", closeTaskDialog);
+        document.getElementById("btn-save-task").addEventListener("click", saveTaskFromDialog);
+        document.getElementById("btn-focus-latest").addEventListener("click", focusLatestPoi);
+        document.getElementById("map-popup-close").addEventListener("click", closeMapPopup);
+        taskDialogEl.addEventListener("click", (event) => {
+            if (event.target === taskDialogEl) closeTaskDialog();
+        });
+        mapPopupEl.addEventListener("click", (event) => {
+            if (event.target === mapPopupEl) closeMapPopup();
+        });
+
+        loadGpxAssets();
+        wireMenuNavigation();
+
+        db.collection("routes").onSnapshot(
+            (snapshot) => {
+                dataStore.cloudRoutes = snapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    source: "firestore",
+                    ...doc.data()
+                }));
+                setLastUpdate();
+                renderDashboard();
+            },
+            (error) => handleListenerError(error, "routes")
+        );
+
+        db.collection("pois").onSnapshot(
+            (snapshot) => {
+                dataStore.cloudPois = snapshot.docs.map((doc) => ({
+                    id: doc.id,
+                    source: "firestore",
+                    ...doc.data()
+                }));
+                updateAiSuggestions();
+                setLastUpdate();
+                renderDashboard();
+            },
+            (error) => handleListenerError(error, "pois")
+        );
+
+        db.collection("tasks").onSnapshot(
+            (snapshot) => {
+                dataStore.tasks = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+                updateAiSuggestions();
+                setLastUpdate();
+                renderDashboard();
+            },
+            (error) => handleListenerError(error, "tasks")
+        );
+
+        function handleListenerError(error, collectionName) {
+            document.getElementById("sync-status").textContent = `Fout bij ${collectionName}`;
+            showToast(`Kon ${collectionName} niet laden`);
+            console.error(error);
+        }
+
+        function setLastUpdate() {
+            lastUpdateAt = new Date();
+            document.getElementById("sync-status").textContent = "Live verbonden";
+            document.getElementById("last-update").textContent = formatDate(lastUpdateAt.getTime(), true);
+        }
+
+        async function loadGpxAssets() {
+            try {
+                const responses = await Promise.all(
+                    GPX_FILES.map(async (fileName) => {
+                        const response = await fetch(`./routes/${encodeURIComponent(fileName)}`);
+                        if (!response.ok) throw new Error(`Kon ${fileName} niet laden`);
+                        return { fileName, text: await response.text() };
+                    })
+                );
+
+                const parsed = responses.map(({ fileName, text }) => parseGpxAsset(fileName, text));
+                dataStore.gpxRoutes = parsed.map((entry) => entry.route);
+                dataStore.gpxPois = parsed.flatMap((entry) => entry.pois);
+                updateAiSuggestions();
+                setLastUpdate();
+                renderDashboard();
+            } catch (error) {
+                console.error(error);
+                document.getElementById("sync-status").textContent = "GPX deels niet geladen";
+                showToast("Kon niet alle GPX-bestanden laden");
+            }
+        }
+
+        function updateAiSuggestions() {
+            const allPois = [...dataStore.cloudPois, ...dataStore.gpxPois];
+            const weedPois = allPois.filter((poi) => normalizeType(getPoiTypeSignal(poi)) === "weed");
+            const staleTasks = dataStore.tasks.filter((task) => !isTaskClosed(task) && getItemAgeHours(task.createdAt) > 24);
+            const suggestions = [];
+
+            if (weedPois.length > 0) {
+                suggestions.push({
+                    id: "ai-weed-cluster",
+                    name: "AI: bundel onkruidmeldingen",
+                    desc: `${weedPois.length} onkruidmeldingen kunnen als gecombineerde taak worden ingepland.`,
+                    severity: weedPois.length > 3 ? "hoog" : "gemiddeld",
+                    actionLabel: "Maak bundeltaak",
+                    type: "suggestion",
+                    sourceItems: weedPois.map((poi) => poi.id)
+                });
+            }
+
+            if (staleTasks.length > 0) {
+                suggestions.push({
+                    id: "ai-stale-tasks",
+                    name: "AI: herverdeel open taken",
+                    desc: `${staleTasks.length} open taken staan langer dan 24 uur open. Plan controle of herverdeling in.`,
+                    severity: staleTasks.length > 2 ? "hoog" : "gemiddeld",
+                    actionLabel: "Plan opvolging",
+                    type: "suggestion",
+                    sourceItems: staleTasks.map((task) => task.id)
+                });
+            }
+
+            if (suggestions.length === 0) {
+                suggestions.push({
+                    id: "ai-idle",
+                    name: "AI: geen acute herplanning nodig",
+                    desc: "Er zijn geen duidelijke clusters of achterstanden gevonden in de huidige dataset.",
+                    severity: "laag",
+                    type: "idle"
+                });
+            }
+
+            dataStore.ai = suggestions;
+        }
+
+        function renderDashboard() {
+            const filtered = getFilteredData();
+            renderPriorityStrip(filtered);
+            renderMap(filtered);
+            renderOperationsSection(filtered);
+            renderPlanningSection(filtered);
+            renderExceptionsSection(filtered);
+            renderContextPanel(filtered);
+            renderAreaFilterOptions();
+            updateMapCounters(filtered);
+        }
+
+        function getFilteredData() {
+            const routes = filterRoutes([...dataStore.gpxRoutes, ...dataStore.cloudRoutes]);
+            const pois = filterPois([...dataStore.gpxPois, ...dataStore.cloudPois]);
+            const tasks = filterTasks(dataStore.tasks);
+            const ai = dataStore.ai;
+            return { routes, pois, tasks, ai };
+        }
+
+        function filterRoutes(routes) {
+            return routes.filter((route) => matchesArea(route.name || route.comments || ""));
+        }
+
+        function filterPois(pois) {
+            return pois.filter((poi) => {
+                if (!matchesArea(poi.description || poi.type || "")) return false;
+                if (activeFilters.status === "weed" && normalizeType(getPoiTypeSignal(poi)) !== "weed") return false;
+                return true;
+            });
+        }
+
+        function filterTasks(tasks) {
+            return tasks.filter((task) => {
+                const haystack = `${task.name || ""} ${task.notes || ""} ${task.source || ""}`;
+                if (!matchesArea(haystack)) return false;
+                if (activeFilters.status === "open" && isTaskClosed(task)) return false;
+                if (activeFilters.status === "closed" && !isTaskClosed(task)) return false;
+                return true;
+            });
+        }
+
+        function matchesArea(text) {
+            if (activeFilters.area === "all") return true;
+            return String(text || "").toLowerCase().includes(activeFilters.area.toLowerCase());
+        }
+
+        function renderPriorityStrip(filtered) {
+            const openTasks = filtered.tasks.filter((task) => !isTaskClosed(task));
+            const urgentPois = filtered.pois.filter((poi) => getItemAgeHours(poi.timestamp) <= 24);
+            const aiCount = filtered.ai.filter((item) => item.type === "suggestion").length;
+
+            document.getElementById("prio-open-tasks").textContent = String(openTasks.length);
+            document.getElementById("prio-open-tasks-meta").textContent =
+                openTasks.length > 0
+                    ? `${Math.min(openTasks.length, 3)} taak/taken direct zichtbaar in planning.`
+                    : "Geen open taken in de huidige selectie.";
+
+            document.getElementById("prio-urgent-pois").textContent = String(urgentPois.length);
+            document.getElementById("prio-urgent-pois-meta").textContent =
+                urgentPois.length > 0
+                    ? "Recente meldingen uit de laatste 24 uur vragen beoordeling."
+                    : "Geen recente meldingen in de huidige selectie.";
+
+            document.getElementById("prio-routes").textContent = String(filtered.routes.length);
+            document.getElementById("prio-routes-meta").textContent =
+                filtered.routes.length > 0
+                    ? `Laatste route: ${filtered.routes[0].name || "Naamloos"}`
+                    : "Nog geen routes gevonden.";
+
+            document.getElementById("prio-ai").textContent = String(aiCount);
+            document.getElementById("prio-ai-meta").textContent =
+                aiCount > 0
+                    ? "AI-signalen op basis van meldingen en achterstanden."
+                    : "Geen AI-voorstellen in de huidige selectie.";
+        }
+
+        function updateMapCounters(filtered) {
+            const exceptions = buildExceptionItems(filtered);
+            document.getElementById("map-routes").textContent = String(filtered.routes.length);
+            document.getElementById("map-pois").textContent = String(filtered.pois.length);
+            document.getElementById("map-tasks").textContent = String(filtered.tasks.length);
+            document.getElementById("map-exceptions").textContent = String(exceptions.length);
+        }
+
+        function renderMap(filtered) {
+            clearMarkers();
+            clearRouteLayers();
+
+            filtered.routes.forEach((route) => {
+                if (!Array.isArray(route.trackPoints) || route.trackPoints.length < 2) return;
+                const line = L.polyline(route.trackPoints, {
+                    color: selectedItem && selectedItem.kind === "route" && selectedItem.item.id === route.id ? "#d56a34" : "#234f3f",
+                    weight: selectedItem && selectedItem.kind === "route" && selectedItem.item.id === route.id ? 6 : 4,
+                    opacity: 0.82
+                }).addTo(map);
+                line.on("click", () => {
+                    selectItem("route", route);
+                    openMapPopup("route", route);
+                });
+                routeLayers.push(line);
+            });
+
+            filtered.pois.forEach((poi) => {
+                if (!hasValidCoordinates(poi)) return;
+                const isWeed = normalizeType(getPoiTypeSignal(poi)) === "weed";
+                const icon = isWeed ? weedIcon : alertIcon;
+                const marker = L.marker([Number(poi.latitude), Number(poi.longitude)], { icon }).addTo(map);
+                marker.bindPopup(
+                    `<strong>${escapeHtml(poi.type || "Melding")}</strong><br>${escapeHtml(poi.description || "Geen toelichting")}`
+                );
+                marker.on("click", () => {
+                    selectItem("poi", poi);
+                    openMapPopup("poi", poi);
+                });
+                markers.push(marker);
+            });
+
+            const selectedPoi = selectedItem && selectedItem.kind === "poi" ? selectedItem.item : null;
+            const selectedRoute = selectedItem && selectedItem.kind === "route" ? selectedItem.item : null;
+            if (selectedPoi && hasValidCoordinates(selectedPoi)) {
+                map.setView([Number(selectedPoi.latitude), Number(selectedPoi.longitude)], 17);
+            } else if (selectedRoute && Array.isArray(selectedRoute.trackPoints) && selectedRoute.trackPoints.length > 1) {
+                map.fitBounds(L.latLngBounds(selectedRoute.trackPoints).pad(0.12));
+            } else if (filtered.pois.length > 0) {
+                fitToPois(filtered.pois);
+            } else if (filtered.routes.length > 0) {
+                fitToRoutes(filtered.routes);
+            }
+        }
+
+        function fitToPois(pois) {
+            const validPois = pois.filter(hasValidCoordinates);
+            if (validPois.length === 0) return;
+            const bounds = L.latLngBounds(validPois.map((poi) => [Number(poi.latitude), Number(poi.longitude)]));
+            map.fitBounds(bounds.pad(0.2));
         }
 
         function clearMarkers() {
-            markers.forEach(m => map.removeLayer(m));
+            markers.forEach((marker) => map.removeLayer(marker));
             markers = [];
         }
 
-        // Live Data Listeners
-        db.collection("routes").onSnapshot(s => {
-            dataStore.routes = s.docs.map(d => ({id: d.id, ...d.data()}));
-            document.getElementById('stat-routes').innerText = dataStore.routes.length;
-            if(currentTab === 'routes') renderList();
-        });
+        function clearRouteLayers() {
+            routeLayers.forEach((layer) => map.removeLayer(layer));
+            routeLayers = [];
+        }
 
-        db.collection("pois").onSnapshot(s => {
-            dataStore.pois = s.docs.map(d => ({id: d.id, ...d.data()}));
-            document.getElementById('stat-pois').innerText = dataStore.pois.length;
-            updateAiSuggestions();
-            if(currentTab === 'pois' || currentTab === 'ai') renderList();
-            updateMapMarkers();
-        });
+        function fitToRoutes(routes) {
+            const routePoints = routes
+                .flatMap((route) => Array.isArray(route.trackPoints) ? route.trackPoints : [])
+                .filter((point) => Array.isArray(point) && point.length === 2);
+            if (routePoints.length === 0) return;
+            map.fitBounds(L.latLngBounds(routePoints).pad(0.12));
+        }
 
-        db.collection("tasks").onSnapshot(s => {
-            dataStore.tasks = s.docs.map(d => ({id: d.id, ...d.data()}));
-            document.getElementById('stat-tasks').innerText = dataStore.tasks.length;
-            if(currentTab === 'tasks') renderList();
-        });
+        function renderOperationsSection(filtered) {
+            const container = document.getElementById("operations-section");
+            const routeItems = filtered.routes
+                .slice()
+                .sort((a, b) => safeNumber(b.createdAt) - safeNumber(a.createdAt))
+                .slice(0, 4)
+                .map((route) =>
+                    createListItem({
+                        kind: "route",
+                        item: route,
+                        title: route.name || "Naamloze route",
+                        subtitle: buildRouteSubtitle(route),
+                        badges: [
+                            { label: `${safeNumber(route.distanceKm).toFixed(1)} km`, tone: "info" },
+                            { label: formatDate(route.createdAt), tone: "success" }
+                        ]
+                    })
+                );
 
-        function updateAiSuggestions() {
-            const recentPois = dataStore.pois.filter(p => p.type === 'WEED');
-            if (recentPois.length > 0) {
-                dataStore.ai = [{
-                    id: 'ai-suggest-1',
-                    name: "AI Suggestie: Onkruid Verwijderen",
-                    desc: `Er zijn ${recentPois.length} nieuwe onkruidlocaties gemeld. Maak een route om deze te reinigen.`,
-                    type: 'suggestion',
-                    actionLabel: 'TAAK ACCEPTEREN'
-                }];
-            } else {
-                dataStore.ai = [{
-                    id: 'ai-idle',
-                    name: "AI Agent Slaapt",
-                    desc: "Geen nieuwe meldingen die actie vereisen.",
-                    type: 'idle'
-                }];
+            const poiItems = filtered.pois
+                .slice()
+                .sort((a, b) => safeNumber(b.timestamp) - safeNumber(a.timestamp))
+                .slice(0, 3)
+                .map((poi) =>
+                    createListItem({
+                        kind: "poi",
+                        item: poi,
+                        title: poi.type || "Melding",
+                        subtitle: poi.description || `Locatie ${formatCoordinates(poi)}`,
+                        badges: [
+                            { label: getPoiSeverityLabel(poi), tone: getPoiSeverityTone(poi) },
+                            { label: formatDate(poi.timestamp), tone: "accent" }
+                        ]
+                    })
+                );
+
+            container.innerHTML = `
+                ${renderListBlock("Actieve routes", routeItems, "Geen routes gevonden in de huidige filter.")}
+                ${renderListBlock("Recente meldingen", poiItems, "Geen meldingen om te tonen.")}
+            `;
+            wireListInteractions(container);
+        }
+
+        function renderPlanningSection(filtered) {
+            const container = document.getElementById("planning-section");
+            const taskItems = filtered.tasks
+                .slice()
+                .sort((a, b) => safeNumber(b.createdAt) - safeNumber(a.createdAt))
+                .slice(0, 5)
+                .map((task) =>
+                    createListItem({
+                        kind: "task",
+                        item: task,
+                        title: task.name || "Taak zonder naam",
+                        subtitle: task.notes || `Bron: ${task.source || "onbekend"}`,
+                        badges: [
+                            { label: task.status || "open", tone: isTaskClosed(task) ? "success" : "warning" },
+                            { label: formatDate(task.createdAt), tone: "info" }
+                        ]
+                    })
+                );
+
+            const aiItems = filtered.ai
+                .slice(0, 3)
+                .map((item) =>
+                    createListItem({
+                        kind: "ai",
+                        item,
+                        title: item.name,
+                        subtitle: item.desc,
+                        badges: [
+                            { label: item.severity || "laag", tone: item.severity === "hoog" ? "warning" : "accent" }
+                        ]
+                    })
+                );
+
+            container.innerHTML = `
+                ${renderListBlock("Open planning", taskItems, "Er zijn nog geen taken in de huidige selectie.")}
+                ${renderListBlock("AI-aanbevelingen", aiItems, "Nog geen AI-voorstellen beschikbaar.")}
+            `;
+            wireListInteractions(container);
+        }
+
+        function renderExceptionsSection(filtered) {
+            const container = document.getElementById("exceptions-section");
+            const exceptionItems = buildExceptionItems(filtered)
+                .slice(0, 6)
+                .map((entry) =>
+                    createListItem({
+                        kind: entry.kind,
+                        item: entry.item,
+                        title: entry.title,
+                        subtitle: entry.subtitle,
+                        badges: entry.badges
+                    })
+                );
+
+            container.innerHTML = renderListBlock(
+                "Direct controleren",
+                exceptionItems,
+                "Geen uitzonderingen gevonden. De huidige selectie oogt stabiel."
+            );
+            wireListInteractions(container);
+        }
+
+        function buildExceptionItems(filtered) {
+            const staleTasks = filtered.tasks
+                .filter((task) => !isTaskClosed(task) && getItemAgeHours(task.createdAt) > 24)
+                .map((task) => ({
+                    kind: "task",
+                    item: task,
+                    title: task.name || "Open taak",
+                    subtitle: `Staat al ${Math.floor(getItemAgeHours(task.createdAt))} uur open.`,
+                    badges: [{ label: "achterstand", tone: "warning" }]
+                }));
+
+            const urgentPois = filtered.pois
+                .filter((poi) => getItemAgeHours(poi.timestamp) <= 24)
+                .map((poi) => ({
+                    kind: "poi",
+                    item: poi,
+                    title: poi.type || "Nieuwe melding",
+                    subtitle: poi.description || `Nieuwe melding op ${formatCoordinates(poi)}`,
+                    badges: [{ label: "nieuw", tone: "accent" }]
+                }));
+
+            return [...urgentPois, ...staleTasks].sort((a, b) => {
+                const left = safeNumber(a.item.timestamp || a.item.createdAt);
+                const right = safeNumber(b.item.timestamp || b.item.createdAt);
+                return right - left;
+            });
+        }
+
+        function renderContextPanel(filtered) {
+            const contextDetails = document.getElementById("context-details");
+            if (!selectedItem || !isSelectionStillVisible(selectedItem, filtered)) {
+                selectedItem = pickDefaultSelection(filtered);
             }
-        }
 
-        function renderList() {
-            const container = document.getElementById('list-container');
-            container.innerHTML = '';
-
-            const list = dataStore[currentTab];
-            list.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'list-item';
-
-                let title = item.name || item.type || "Naamloos";
-                let sub = item.desc || item.id;
-                let badge = "";
-
-                if(currentTab === 'tasks') {
-                    badge = `<span class="status-badge" style="background:${item.status === 'open' ? '#4caf50' : '#9e9e9e'}">${item.status}</span>`;
-                }
-
-                div.innerHTML = `
-                    <span class="item-title">${title}</span>
-                    <span class="item-sub">${sub}</span>
-                    ${badge}
+            if (!selectedItem) {
+                document.getElementById("context-title").textContent = "Kies een item uit de lijsten";
+                document.getElementById("context-summary").textContent =
+                    "Selecteer hieronder een route, melding, taak of AI-aanbeveling om extra context en acties te zien.";
+                contextDetails.innerHTML = `
+                    <div class="empty-state">
+                        <strong>Geen selectie actief</strong>
+                        <span>Er is nog geen data of de huidige filter levert geen resultaten op.</span>
+                    </div>
                 `;
-                div.onclick = () => selectItem(item);
-                container.appendChild(div);
-            });
-        }
-
-        function updateMapMarkers() {
-            clearMarkers();
-            dataStore.pois.forEach(p => {
-                if(p.latitude && p.longitude) {
-                    const icon = p.type === 'WEED' ? weedIcon : alertIcon;
-                    const m = L.marker([p.latitude, p.longitude], {icon}).addTo(map)
-                        .bindPopup(`<b>${p.type}</b><br>${new Date(p.timestamp).toLocaleString()}`);
-                    markers.push(m);
-                }
-            });
-        }
-
-        function selectItem(item) {
-            const details = document.getElementById('details');
-            details.style.display = 'block';
-            document.getElementById('det-name').innerText = item.name || item.type || "Details";
-
-            let content = "";
-            if(currentTab === 'tasks') {
-                content = `
-                    <p>Status: <b>${item.status}</b></p>
-                    <p>Aangemaakt: ${new Date(item.createdAt).toLocaleString()}</p>
-                    <button onclick="deleteTask('${item.id}')" style="background:#f44336; color:white; border:none; padding:10px; width:100%; border-radius:5px;">Verwijder Taak</button>
-                `;
-            } else if(currentTab === 'pois') {
-                content = `<p>Type: ${item.type}</p><p>Coördinaten: ${item.latitude}, ${item.longitude}</p>`;
-                map.setView([item.latitude, item.longitude], 18);
-            } else if(currentTab === 'ai' && item.type === 'suggestion') {
-                content = `
-                    <p>${item.desc}</p>
-                    <button onclick="acceptAiSuggestion('${item.name}')" style="background:var(--secondary); color:white; border:none; padding:10px; width:100%; border-radius:5px;">${item.actionLabel}</button>
-                `;
+                return;
             }
 
-            document.getElementById('det-content').innerHTML = content;
+            const html = buildContextHtml(selectedItem.kind, selectedItem.item);
+            document.getElementById("context-title").textContent = html.title;
+            document.getElementById("context-summary").textContent = html.summary;
+            contextDetails.innerHTML = html.body;
+            wireContextActions();
         }
 
-        function acceptAiSuggestion(name) {
-            db.collection("tasks").add({
-                name: name,
-                status: "open",
-                createdAt: Date.now(),
-                source: "AI_AGENT"
-            });
-            alert("AI Taak live verzonden naar app!");
-            hideDetails();
+        function buildContextHtml(kind, item) {
+            if (kind === "route") {
+                return {
+                    title: item.name || "Naamloze route",
+                    summary: "Route-informatie uit je dataset, geschikt voor planning en controle op tablet of pc.",
+                    body: `
+                        <div class="preview-frame large">
+                            ${renderPreviewImage("route", item, item.name || "route")}
+                        </div>
+                        <div class="detail-card">
+                            <h4>Routegegevens</h4>
+                            <div class="detail-list">
+                                ${detailRow("Naam", item.name || "Onbekend")}
+                                ${detailRow("Afstand", `${safeNumber(item.distanceKm).toFixed(1)} km`)}
+                                ${detailRow("Aangemaakt", formatDate(item.createdAt, true))}
+                                ${detailRow("Bron", item.source || "onbekend")}
+                                ${detailRow("Trackpunten", String((item.trackPoints || []).length || 0))}
+                                ${detailRow("Waypoints", String((item.waypoints || []).length || 0))}
+                                ${detailRow("Opmerking", item.comments || item.routeDescription || "Geen opmerkingen")}
+                            </div>
+                        </div>
+                        <div class="detail-card">
+                            <h4>Wat kun je hiermee</h4>
+                            <p class="panel-copy">Gebruik routes als operationeel referentiepunt. Deze route komt direct uit je GPX- of Firestore-data en wordt als lijn op de kaart getoond.</p>
+                        </div>
+                    `
+                };
+            }
+
+            if (kind === "poi") {
+                return {
+                    title: item.type || "Melding",
+                    summary: item.description || "Melding uit het veld met locatie en tijdstip.",
+                    body: `
+                        <div class="preview-frame large">
+                            ${renderPreviewImage("poi", item, item.type || "melding")}
+                        </div>
+                        <div class="detail-card">
+                            <h4>Melding</h4>
+                            <div class="detail-list">
+                                ${detailRow("Type", item.type || "Onbekend")}
+                                ${detailRow("Tijdstip", formatDate(item.timestamp, true))}
+                                ${detailRow("Coördinaten", formatCoordinates(item))}
+                                ${detailRow("Urgentie", getPoiSeverityLabel(item))}
+                            </div>
+                        </div>
+                        <div class="detail-card">
+                            <h4>Omschrijving</h4>
+                            <p class="panel-copy">${escapeHtml(item.description || "Geen extra omschrijving vastgelegd.")}</p>
+                        </div>
+                        <div class="detail-card">
+                            <h4>Acties</h4>
+                            <div class="context-actions">
+                                <button class="secondary-btn" data-action="focus-poi" data-id="${item.id}" type="button">
+                                    <i class="fas fa-map-location-dot"></i>
+                                    <span>Toon op kaart</span>
+                                </button>
+                                <button class="primary-btn" data-action="task-from-poi" data-id="${item.id}" type="button">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Maak taak van melding</span>
+                                </button>
+                            </div>
+                        </div>
+                    `
+                };
+            }
+
+            if (kind === "task") {
+                return {
+                    title: item.name || "Taak",
+                    summary: "Taakstatus en opvolging vanuit je planningslaag.",
+                    body: `
+                        <div class="preview-frame large">
+                            ${renderPreviewImage("task", item, item.name || "taak")}
+                        </div>
+                        <div class="detail-card">
+                            <h4>Taakstatus</h4>
+                            <div class="detail-list">
+                                ${detailRow("Naam", item.name || "Onbekend")}
+                                ${detailRow("Status", item.status || "open")}
+                                ${detailRow("Bron", item.source || "onbekend")}
+                                ${detailRow("Aangemaakt", formatDate(item.createdAt, true))}
+                            </div>
+                        </div>
+                        <div class="detail-card">
+                            <h4>Toelichting</h4>
+                            <p class="panel-copy">${escapeHtml(item.notes || "Geen extra toelichting opgeslagen.")}</p>
+                        </div>
+                        <div class="detail-card">
+                            <h4>Acties</h4>
+                            <div class="context-actions">
+                                ${isTaskClosed(item) ? "" : `
+                                    <button class="secondary-btn" data-action="close-task" data-id="${item.id}" type="button">
+                                        <i class="fas fa-check"></i>
+                                        <span>Markeer als afgerond</span>
+                                    </button>
+                                `}
+                                <button class="danger-btn" data-action="delete-task" data-id="${item.id}" type="button">
+                                    <i class="fas fa-trash"></i>
+                                    <span>Verwijder taak</span>
+                                </button>
+                            </div>
+                        </div>
+                    `
+                };
+            }
+
+            return {
+                title: item.name || "AI-aanbeveling",
+                summary: item.desc || "Voorstel op basis van meldingen en open werk.",
+                body: `
+                    <div class="preview-frame large">
+                        ${renderPreviewImage("ai", item, item.name || "AI-aanbeveling")}
+                    </div>
+                    <div class="detail-card">
+                        <h4>AI-inschatting</h4>
+                        <div class="detail-list">
+                            ${detailRow("Voorstel", item.name || "AI-aanbeveling")}
+                            ${detailRow("Urgentie", item.severity || "laag")}
+                            ${detailRow("Type", item.type || "suggestie")}
+                        </div>
+                    </div>
+                    <div class="detail-card">
+                        <h4>Advies</h4>
+                        <p class="panel-copy">${escapeHtml(item.desc || "Geen extra toelichting.")}</p>
+                    </div>
+                    ${item.type === "suggestion" ? `
+                        <div class="detail-card">
+                            <h4>Actie</h4>
+                            <div class="context-actions">
+                                <button class="primary-btn" data-action="accept-ai" data-id="${item.id}" type="button">
+                                    <i class="fas fa-wand-magic-sparkles"></i>
+                                    <span>${escapeHtml(item.actionLabel || "Accepteer voorstel")}</span>
+                                </button>
+                            </div>
+                        </div>
+                    ` : ""}
+                `
+            };
         }
 
-        function showTaskDialog() {
-            const name = prompt("Taak omschrijving:");
-            if(name) {
-                db.collection("tasks").add({
-                    name: name,
-                    status: "open",
-                    createdAt: Date.now()
+        function renderAreaFilterOptions() {
+            const options = extractAreas();
+            const current = activeFilters.area;
+            const nextOptions = ['<option value="all">Alle gebieden</option>']
+                .concat(options.map((option) => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`))
+                .join("");
+            areaFilterEl.innerHTML = nextOptions;
+            areaFilterEl.value = options.includes(current) ? current : "all";
+            activeFilters.area = areaFilterEl.value;
+        }
+
+        function extractAreas() {
+            const sourceValues = [
+                ...dataStore.gpxRoutes.map((route) => route.name || ""),
+                ...dataStore.cloudRoutes.map((route) => route.name || ""),
+                ...dataStore.gpxPois.map((poi) => `${poi.type || ""} ${poi.description || ""}`),
+                ...dataStore.cloudPois.map((poi) => poi.description || ""),
+                ...dataStore.tasks.map((task) => task.name || "")
+            ];
+            const areas = new Set();
+            sourceValues.forEach((value) => {
+                const match = String(value).match(/[A-Za-zÀ-ÿ0-9]+(?:\s+[A-Za-zÀ-ÿ0-9]+){0,2}/g) || [];
+                match.slice(0, 2).forEach((part) => {
+                    if (part.length >= 4) areas.add(part.trim());
                 });
+            });
+            return Array.from(areas).slice(0, 8);
+        }
+
+        function createListItem({ kind, item, title, subtitle, badges }) {
+            const active = selectedItem && selectedItem.kind === kind && selectedItem.item.id === item.id;
+            return `
+                <div class="list-item${active ? " active" : ""}" data-kind="${kind}" data-id="${item.id}">
+                    <div class="item-layout">
+                        <div class="preview-frame">
+                            ${renderPreviewImage(kind, item, title)}
+                        </div>
+                        <div class="item-main">
+                            <div class="item-topline">
+                                <p class="item-title">${escapeHtml(title)}</p>
+                            </div>
+                            <p class="item-sub">${escapeHtml(subtitle)}</p>
+                            <div class="item-meta">
+                                ${badges.map((badge) => `<span class="badge ${badge.tone || ""}">${escapeHtml(badge.label)}</span>`).join("")}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderListBlock(title, items, emptyText) {
+            if (items.length === 0) {
+                return `
+                    <div>
+                        <p class="item-title" style="margin:0 0 10px">${escapeHtml(title)}</p>
+                        <div class="empty-state">
+                            <strong>Geen items</strong>
+                            <span>${escapeHtml(emptyText)}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div>
+                    <p class="item-title" style="margin:0 0 10px">${escapeHtml(title)}</p>
+                    <div class="item-list">
+                        ${items.join("")}
+                    </div>
+                </div>
+            `;
+        }
+
+        function wireListInteractions(container) {
+            container.querySelectorAll(".list-item").forEach((element) => {
+                element.addEventListener("click", () => {
+                    const kind = element.getAttribute("data-kind");
+                    const id = element.getAttribute("data-id");
+                    const item = findItemByKindAndId(kind, id);
+                    if (item) {
+                        selectItem(kind, item);
+                    }
+                });
+            });
+        }
+
+        function wireContextActions() {
+            document.querySelectorAll("[data-action]").forEach((button) => {
+                button.addEventListener("click", async () => {
+                    const action = button.getAttribute("data-action");
+                    const id = button.getAttribute("data-id");
+
+                    if (action === "focus-poi") {
+                        const poi = [...dataStore.gpxPois, ...dataStore.cloudPois].find((entry) => entry.id === id);
+                        if (poi && hasValidCoordinates(poi)) {
+                            map.setView([Number(poi.latitude), Number(poi.longitude)], 18);
+                        }
+                        return;
+                    }
+
+                    if (action === "focus-route") {
+                        const route = [...dataStore.gpxRoutes, ...dataStore.cloudRoutes].find((entry) => entry.id === id);
+                        if (route && Array.isArray(route.trackPoints) && route.trackPoints.length > 1) {
+                            map.fitBounds(L.latLngBounds(route.trackPoints).pad(0.12));
+                        }
+                        return;
+                    }
+
+                    if (action === "task-from-poi") {
+                        const poi = [...dataStore.gpxPois, ...dataStore.cloudPois].find((entry) => entry.id === id);
+                        if (!poi) return;
+                        openTaskDialog({
+                            name: `Opvolgen: ${poi.type || "melding"}`,
+                            notes: poi.description || `Aangemaakt vanuit melding ${poi.id}`,
+                            source: "DASHBOARD"
+                        });
+                        return;
+                    }
+
+                    if (action === "accept-ai") {
+                        const suggestion = dataStore.ai.find((entry) => entry.id === id);
+                        if (!suggestion) return;
+                        await db.collection("tasks").add({
+                            name: suggestion.name,
+                            status: "open",
+                            createdAt: Date.now(),
+                            source: "AI_AGENT",
+                            notes: suggestion.desc
+                        });
+                        showToast("AI-voorstel omgezet naar taak");
+                        return;
+                    }
+
+                    if (action === "close-task") {
+                        await db.collection("tasks").doc(id).update({ status: "closed", closedAt: Date.now() });
+                        showToast("Taak gemarkeerd als afgerond");
+                        return;
+                    }
+
+                    if (action === "delete-task") {
+                        const task = dataStore.tasks.find((entry) => entry.id === id);
+                        if (!task) return;
+                        const confirmed = window.confirm(`Taak "${task.name || "zonder naam"}" verwijderen?`);
+                        if (!confirmed) return;
+                        await db.collection("tasks").doc(id).delete();
+                        showToast("Taak verwijderd");
+                    }
+                });
+            });
+        }
+
+        function selectItem(kind, item) {
+            selectedItem = { kind, item };
+            if (kind === "poi" && hasValidCoordinates(item)) {
+                map.setView([Number(item.latitude), Number(item.longitude)], 17);
+            } else if (kind === "route" && Array.isArray(item.trackPoints) && item.trackPoints.length > 1) {
+                map.fitBounds(L.latLngBounds(item.trackPoints).pad(0.12));
+            }
+            renderDashboard();
+        }
+
+        function pickDefaultSelection(filtered) {
+            if (filtered.pois.length > 0) return { kind: "poi", item: filtered.pois[0] };
+            if (filtered.tasks.length > 0) return { kind: "task", item: filtered.tasks[0] };
+            if (filtered.routes.length > 0) return { kind: "route", item: filtered.routes[0] };
+            if (filtered.ai.length > 0) return { kind: "ai", item: filtered.ai[0] };
+            return null;
+        }
+
+        function isSelectionStillVisible(selection, filtered) {
+            const collection = filtered[`${selection.kind}s`] || (selection.kind === "ai" ? filtered.ai : []);
+            return collection.some((entry) => entry.id === selection.item.id);
+        }
+
+        function findItemByKindAndId(kind, id) {
+            if (kind === "route") return [...dataStore.gpxRoutes, ...dataStore.cloudRoutes].find((item) => item.id === id);
+            if (kind === "poi") return [...dataStore.gpxPois, ...dataStore.cloudPois].find((item) => item.id === id);
+            if (kind === "task") return dataStore.tasks.find((item) => item.id === id);
+            if (kind === "ai") return dataStore.ai.find((item) => item.id === id);
+            return null;
+        }
+
+        function openTaskDialog(defaults = {}) {
+            taskFormEl.reset();
+            document.getElementById("task-name").value = defaults.name || "";
+            document.getElementById("task-status").value = defaults.status || "open";
+            document.getElementById("task-source").value = defaults.source || "DASHBOARD";
+            document.getElementById("task-notes").value = defaults.notes || "";
+            taskDialogEl.classList.add("open");
+        }
+
+        function closeTaskDialog() {
+            taskDialogEl.classList.remove("open");
+        }
+
+        async function saveTaskFromDialog() {
+            const name = document.getElementById("task-name").value.trim();
+            const status = document.getElementById("task-status").value;
+            const source = document.getElementById("task-source").value;
+            const notes = document.getElementById("task-notes").value.trim();
+
+            if (!name) {
+                showToast("Vul eerst een taaknaam in");
+                return;
+            }
+
+            await db.collection("tasks").add({
+                name,
+                status,
+                source,
+                notes,
+                createdAt: Date.now()
+            });
+
+            closeTaskDialog();
+            showToast("Taak opgeslagen");
+        }
+
+        function openMapPopup(kind, item) {
+            const html = buildContextHtml(kind, item);
+            document.getElementById("map-popup-title").textContent = html.title;
+            document.getElementById("map-popup-summary").textContent = html.summary;
+            document.getElementById("map-popup-body").innerHTML = html.body;
+            document.getElementById("map-popup-actions").innerHTML = buildPopupActions(kind, item);
+            mapPopupEl.classList.add("open");
+            wireContextActions();
+            document.querySelectorAll("[data-popup-close='true']").forEach((button) => {
+                button.addEventListener("click", closeMapPopup);
+            });
+        }
+
+        function closeMapPopup() {
+            mapPopupEl.classList.remove("open");
+        }
+
+        function buildPopupActions(kind, item) {
+            if (kind === "route") {
+                return `
+                    <button class="secondary-btn" type="button" data-popup-close="true">Sluiten</button>
+                    <button class="primary-btn" type="button" data-action="focus-route" data-id="${item.id}">
+                        <i class="fas fa-map"></i>
+                        <span>Focus route</span>
+                    </button>
+                `;
+            }
+
+            if (kind === "poi") {
+                return `
+                    <button class="secondary-btn" type="button" data-popup-close="true">Sluiten</button>
+                    <button class="primary-btn" type="button" data-action="task-from-poi" data-id="${item.id}">
+                        <i class="fas fa-plus"></i>
+                        <span>Maak taak</span>
+                    </button>
+                `;
+            }
+
+            return `<button class="secondary-btn" type="button" data-popup-close="true">Sluiten</button>`;
+        }
+
+        function focusLatestPoi() {
+            const latestPoi = [...dataStore.gpxPois, ...dataStore.cloudPois]
+                .filter(hasValidCoordinates)
+                .slice()
+                .sort((a, b) => safeNumber(b.timestamp) - safeNumber(a.timestamp))[0];
+
+            if (!latestPoi) {
+                showToast("Geen melding met locatie gevonden");
+                return;
+            }
+
+            selectItem("poi", latestPoi);
+        }
+
+        function normalizeType(type) {
+            const raw = String(type || "").trim().toLowerCase();
+            if (raw.includes("weed") || raw.includes("onkruid")) return "weed";
+            if (raw.includes("schade")) return "damage";
+            if (raw.includes("obstakel")) return "obstacle";
+            return raw || "unknown";
+        }
+
+        function getPoiTypeSignal(poi) {
+            return `${poi.type || ""} ${poi.description || ""}`.trim();
+        }
+
+        function renderPreviewImage(kind, item, label) {
+            const primarySrc = createPreviewDataUri(kind, item);
+            const fallbackSrc = createPreviewFallbackDataUri(kind, item);
+            return `<img src="${primarySrc}" alt="Preview van ${escapeHtml(label)}" onerror="this.onerror=null;this.src='${escapeAttribute(fallbackSrc)}'" />`;
+        }
+
+        function createPreviewDataUri(kind, item) {
+            if (kind === "route") return createRouteStaticMapUrl(item);
+            if (kind === "poi") return resolvePoiPreviewUrl(item);
+            if (kind === "task") return createLabelPreviewDataUri(item.name || "Taak", item.status || "open", "#4f7ca8");
+            return createLabelPreviewDataUri(item.name || "AI", item.severity || "laag", "#d56a34");
+        }
+
+        function createPreviewFallbackDataUri(kind, item) {
+            if (kind === "route") return createRouteFallbackDataUri(item);
+            if (kind === "poi") return createPoiFallbackDataUri(item);
+            if (kind === "task") return createLabelPreviewDataUri(item.name || "Taak", item.status || "open", "#4f7ca8");
+            return createLabelPreviewDataUri(item.name || "AI", item.severity || "laag", "#d56a34");
+        }
+
+        function createRouteStaticMapUrl(route) {
+            const points = Array.isArray(route.trackPoints) ? route.trackPoints : [];
+            const startPoint = points[0];
+            if (!startPoint || !GOOGLE_MAPS_STATIC_KEY) {
+                return createRouteFallbackDataUri(route);
+            }
+
+            const sampledPoints = sampleRoutePoints(points, 22);
+            const encodedPath = encodeGooglePolyline(sampledPoints);
+            const params = new URLSearchParams({
+                size: "440x320",
+                scale: "2",
+                maptype: "roadmap",
+                key: GOOGLE_MAPS_STATIC_KEY
+            });
+            params.append("markers", `color:0xd56a34|label:S|${startPoint[0]},${startPoint[1]}`);
+            if (points.length > 1) {
+                const endPoint = points[points.length - 1];
+                params.append("markers", `color:0x2d7d4f|label:E|${endPoint[0]},${endPoint[1]}`);
+                params.append("path", `color:0x234f3f|weight:4|enc:${encodedPath}`);
+            } else {
+                params.append("center", `${startPoint[0]},${startPoint[1]}`);
+                params.append("zoom", "16");
+            }
+
+            return `https://maps.googleapis.com/maps/api/staticmap?${params.toString()}`;
+        }
+
+        function createRouteFallbackDataUri(route) {
+            const points = Array.isArray(route.trackPoints) ? route.trackPoints : [];
+            const width = 220;
+            const height = 160;
+            let polyline = "18,120 60,92 120,84 190,38";
+
+            if (points.length > 1) {
+                const lats = points.map((point) => point[0]);
+                const lngs = points.map((point) => point[1]);
+                const minLat = Math.min(...lats);
+                const maxLat = Math.max(...lats);
+                const minLng = Math.min(...lngs);
+                const maxLng = Math.max(...lngs);
+                polyline = points.map((point) => {
+                    const x = 18 + ((point[1] - minLng) / Math.max(maxLng - minLng, 0.00001)) * (width - 36);
+                    const y = 20 + (1 - ((point[0] - minLat) / Math.max(maxLat - minLat, 0.00001))) * (height - 40);
+                    return `${x.toFixed(1)},${y.toFixed(1)}`;
+                }).join(" ");
+            }
+
+            const svg = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+                    <rect width="${width}" height="${height}" rx="18" fill="#f4efe6"/>
+                    <rect x="8" y="8" width="${width - 16}" height="${height - 16}" rx="14" fill="#fffdf9" stroke="#d7c4aa"/>
+                    <polyline points="${polyline}" fill="none" stroke="#234f3f" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="${polyline.split(" ")[0].split(",")[0]}" cy="${polyline.split(" ")[0].split(",")[1]}" r="7" fill="#d56a34"/>
+                    <circle cx="${polyline.split(" ").slice(-1)[0].split(",")[0]}" cy="${polyline.split(" ").slice(-1)[0].split(",")[1]}" r="7" fill="#2d7d4f"/>
+                    <text x="18" y="28" font-size="12" font-family="Segoe UI, Arial" fill="#667161">Route</text>
+                    <text x="18" y="146" font-size="14" font-family="Segoe UI, Arial" font-weight="700" fill="#1f2c21">${escapeSvgText(route.name || "Route")}</text>
+                </svg>
+            `;
+            return svgToDataUri(svg);
+        }
+
+        function resolvePoiPreviewUrl(poi) {
+            const matchedPhoto = resolvePoiPhotoUrl(poi);
+            if (matchedPhoto) return matchedPhoto;
+            return createPoiFallbackDataUri(poi);
+        }
+
+        function createPoiFallbackDataUri(poi) {
+            const color = normalizeType(getPoiTypeSignal(poi)) === "weed" ? "#2d7d4f" : "#b95027";
+            const label = escapeSvgText(poi.type || "Punt");
+            const subtitle = escapeSvgText((poi.description || formatCoordinates(poi)).slice(0, 42));
+            const svg = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="220" height="160" viewBox="0 0 220 160">
+                    <rect width="220" height="160" rx="18" fill="#f4efe6"/>
+                    <rect x="8" y="8" width="204" height="144" rx="14" fill="#fffdf9" stroke="#d7c4aa"/>
+                    <circle cx="110" cy="58" r="24" fill="${color}" opacity="0.16"/>
+                    <path d="M110 33c-10.3 0-18.5 8.2-18.5 18.5 0 13.1 18.5 34.5 18.5 34.5s18.5-21.4 18.5-34.5C128.5 41.2 120.3 33 110 33zm0 25.5a7 7 0 1 1 0-14 7 7 0 0 1 0 14z" fill="${color}"/>
+                    <text x="18" y="116" font-size="13" font-family="Segoe UI, Arial" font-weight="700" fill="#1f2c21">${label}</text>
+                    <text x="18" y="136" font-size="12" font-family="Segoe UI, Arial" fill="#667161">${subtitle}</text>
+                </svg>
+            `;
+            return svgToDataUri(svg);
+        }
+
+        function resolvePoiPhotoUrl(poi) {
+            const signal = normalizeLookupText(`${poi.type || ""} ${poi.description || ""}`);
+            const numericPrefix = extractLeadingNumber(poi.description || poi.type || "");
+            const exactNumericMatch = numericPrefix
+                ? MARKER_PHOTO_FILES.find((fileName) => normalizeLookupText(fileName).startsWith(`${numericPrefix} foto`))
+                : "";
+            if (exactNumericMatch) {
+                return `./marker-images/${encodeURIComponent(exactNumericMatch)}`;
+            }
+
+            const bestMatch = MARKER_PHOTO_FILES
+                .map((fileName) => ({ fileName, score: scorePoiPhotoMatch(signal, normalizeLookupText(fileName)) }))
+                .sort((left, right) => right.score - left.score)[0];
+
+            if (bestMatch && bestMatch.score >= 2) {
+                return `./marker-images/${encodeURIComponent(bestMatch.fileName)}`;
+            }
+
+            return "";
+        }
+
+        function createLabelPreviewDataUri(title, label, color) {
+            const svg = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="220" height="160" viewBox="0 0 220 160">
+                    <rect width="220" height="160" rx="18" fill="#f4efe6"/>
+                    <rect x="8" y="8" width="204" height="144" rx="14" fill="#fffdf9" stroke="#d7c4aa"/>
+                    <rect x="18" y="22" width="86" height="28" rx="14" fill="${color}" opacity="0.14"/>
+                    <text x="29" y="40" font-size="12" font-family="Segoe UI, Arial" font-weight="700" fill="${color}">${escapeSvgText(label)}</text>
+                    <text x="18" y="92" font-size="22" font-family="Segoe UI, Arial" font-weight="700" fill="#1f2c21">${escapeSvgText(title)}</text>
+                </svg>
+            `;
+            return svgToDataUri(svg);
+        }
+
+        function svgToDataUri(svg) {
+            return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+        }
+
+        function normalizeLookupText(value) {
+            return String(value || "")
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[()_,./-]+/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+        }
+
+        function extractLeadingNumber(value) {
+            const match = String(value || "").match(/\b(\d{1,2})\b/);
+            return match ? match[1] : "";
+        }
+
+        function scorePoiPhotoMatch(signal, fileSignal) {
+            if (!signal || !fileSignal) return 0;
+            let score = 0;
+            const tokens = signal.split(" ").filter((token) => token.length >= 4);
+            tokens.forEach((token) => {
+                if (fileSignal.includes(token)) score += 2;
+            });
+            if (signal.includes("rijsenburgselaan") && fileSignal.includes("rijsenburgselaan")) score += 3;
+            if (signal.includes("n225") && fileSignal.includes("n225")) score += 3;
+            if (signal.includes("plateau") && fileSignal.includes("foto")) score += 1;
+            return score;
+        }
+
+        function sampleRoutePoints(points, maxPoints) {
+            if (!Array.isArray(points) || points.length <= maxPoints) return points;
+            const step = Math.max(1, Math.floor(points.length / maxPoints));
+            const sampled = points.filter((_point, index) => index % step === 0);
+            const lastPoint = points[points.length - 1];
+            if (sampled[sampled.length - 1] !== lastPoint) sampled.push(lastPoint);
+            return sampled;
+        }
+
+        function encodeGooglePolyline(points) {
+            let lastLat = 0;
+            let lastLng = 0;
+            let result = "";
+
+            points.forEach(([lat, lng]) => {
+                const currentLat = Math.round(lat * 1e5);
+                const currentLng = Math.round(lng * 1e5);
+                result += encodeSignedNumber(currentLat - lastLat);
+                result += encodeSignedNumber(currentLng - lastLng);
+                lastLat = currentLat;
+                lastLng = currentLng;
+            });
+
+            return result;
+        }
+
+        function encodeSignedNumber(value) {
+            let shifted = value < 0 ? ~(value << 1) : value << 1;
+            let encoded = "";
+            while (shifted >= 0x20) {
+                encoded += String.fromCharCode((0x20 | (shifted & 0x1f)) + 63);
+                shifted >>= 5;
+            }
+            encoded += String.fromCharCode(shifted + 63);
+            return encoded;
+        }
+
+        function escapeSvgText(value) {
+            return String(value || "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&apos;");
+        }
+
+        function getPoiSeverityLabel(poi) {
+            const age = getItemAgeHours(poi.timestamp);
+            const type = normalizeType(getPoiTypeSignal(poi));
+            if (type === "weed" && age <= 24) return "nu";
+            if (age <= 24) return "nieuw";
+            if (age <= 72) return "controle";
+            return "gepland";
+        }
+
+        function getPoiSeverityTone(poi) {
+            const label = getPoiSeverityLabel(poi);
+            if (label === "nu") return "warning";
+            if (label === "nieuw") return "accent";
+            if (label === "controle") return "info";
+            return "success";
+        }
+
+        function isTaskClosed(task) {
+            const status = String(task.status || "").toLowerCase();
+            return status === "closed" || status === "afgerond" || status === "done";
+        }
+
+        function getItemAgeHours(timestamp) {
+            if (!timestamp) return Number.POSITIVE_INFINITY;
+            return Math.max(0, (Date.now() - Number(timestamp)) / 3600000);
+        }
+
+        function buildRouteSubtitle(route) {
+            const comments = route.comments || route.routeDescription || "Geen extra opmerkingen";
+            const waypointCount = Array.isArray(route.waypoints) ? route.waypoints.length : 0;
+            return `${comments} • ${safeNumber(route.distanceKm).toFixed(1)} km • ${waypointCount} punten`;
+        }
+
+        function parseGpxAsset(fileName, xmlText) {
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(xmlText, "application/xml");
+            const name = firstText(xml, ["metadata > name", "trk > name"]) || fileName.replace(/\.gpx$/i, "");
+            const createdAt = toTimestamp(firstText(xml, ["metadata > time", "wpt > time", "trkpt > time"])) || Date.now();
+            const description = firstText(xml, ["trk > desc", "metadata > desc"]) || "";
+            const trackPoints = Array.from(xml.querySelectorAll("trkpt")).map((node) => [
+                Number(node.getAttribute("lat")),
+                Number(node.getAttribute("lon"))
+            ]).filter((point) => Number.isFinite(point[0]) && Number.isFinite(point[1]));
+            const waypoints = Array.from(xml.querySelectorAll("wpt")).map((node, index) => {
+                const latitude = Number(node.getAttribute("lat"));
+                const longitude = Number(node.getAttribute("lon"));
+                return {
+                    id: `gpx-poi-${fileName}-${index}`,
+                    source: "gpx",
+                    routeId: `gpx-route-${fileName}`,
+                    latitude,
+                    longitude,
+                    timestamp: toTimestamp(firstText(node, ["time"])) || createdAt,
+                    type: firstText(node, ["name"]) || "Waypoint",
+                    description: firstText(node, ["desc", "cmt"]) || fileName,
+                    icon: firstText(node, ["sym"]) || ""
+                };
+            }).filter((poi) => hasValidCoordinates(poi));
+
+            const route = {
+                id: `gpx-route-${fileName}`,
+                source: "gpx",
+                name,
+                comments: `GPX-bestand: ${fileName}`,
+                routeDescription: description,
+                createdAt,
+                distanceKm: calculateRouteDistanceKm(trackPoints),
+                trackPoints,
+                waypoints,
+                fileName
+            };
+
+            return { route, pois: waypoints };
+        }
+
+        function firstText(root, selectors) {
+            for (const selector of selectors) {
+                const node = root.querySelector(selector);
+                if (node && String(node.textContent || "").trim()) {
+                    return String(node.textContent).trim();
+                }
+            }
+            return "";
+        }
+
+        function toTimestamp(value) {
+            const parsed = Date.parse(String(value || ""));
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+
+        function calculateRouteDistanceKm(trackPoints) {
+            if (!Array.isArray(trackPoints) || trackPoints.length < 2) return 0;
+            let total = 0;
+            for (let index = 1; index < trackPoints.length; index += 1) {
+                total += haversineDistanceKm(trackPoints[index - 1], trackPoints[index]);
+            }
+            return total;
+        }
+
+        function haversineDistanceKm([lat1, lon1], [lat2, lon2]) {
+            const toRad = (value) => (value * Math.PI) / 180;
+            const earthRadiusKm = 6371;
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return earthRadiusKm * c;
+        }
+
+        function safeNumber(value) {
+            const number = Number(value);
+            return Number.isFinite(number) ? number : 0;
+        }
+
+        function formatDate(timestamp, includeTime = false) {
+            if (!timestamp) return "Onbekend";
+            try {
+                return new Intl.DateTimeFormat("nl-NL", {
+                    dateStyle: "medium",
+                    timeStyle: includeTime ? "short" : undefined
+                }).format(new Date(Number(timestamp)));
+            } catch (_error) {
+                return "Onbekend";
             }
         }
 
-        function deleteTask(id) {
-            if(confirm("Weet je het zeker?")) {
-                db.collection("tasks").doc(id).delete();
-                hideDetails();
+        function formatCoordinates(item) {
+            if (!hasValidCoordinates(item)) return "Onbekend";
+            return `${Number(item.latitude).toFixed(5)}, ${Number(item.longitude).toFixed(5)}`;
+        }
+
+        function hasValidCoordinates(item) {
+            return Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude));
+        }
+
+        function detailRow(label, value) {
+            return `
+                <div class="detail-row">
+                    <span class="detail-label">${escapeHtml(label)}</span>
+                    <span class="detail-value">${escapeHtml(value)}</span>
+                </div>
+            `;
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            document.getElementById("toast-text").textContent = message;
+            toast.classList.add("visible");
+            window.clearTimeout(toastTimer);
+            toastTimer = window.setTimeout(() => toast.classList.remove("visible"), 2800);
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        function escapeAttribute(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        function wireMenuNavigation() {
+            document.querySelectorAll("[data-scroll-target]").forEach((button) => {
+                button.addEventListener("click", () => {
+                    const targetId = button.getAttribute("data-scroll-target");
+                    const target = document.getElementById(targetId);
+                    if (!target) return;
+                    activeScrollTarget = targetId;
+                    updateMenuStates();
+                    target.scrollIntoView({ behavior: "smooth", block: "start" });
+                });
+            });
+
+            window.addEventListener("scroll", updateScrollTargetFromViewport, { passive: true });
+        }
+
+        function updateScrollTargetFromViewport() {
+            const ids = ["section-overview", "section-map", "section-routes", "section-planning", "section-exceptions"];
+            const firstVisible = ids.find((id) => {
+                const element = document.getElementById(id);
+                if (!element) return false;
+                const rect = element.getBoundingClientRect();
+                return rect.top <= 180 && rect.bottom >= 120;
+            });
+            if (firstVisible && firstVisible !== activeScrollTarget) {
+                activeScrollTarget = firstVisible;
+                updateMenuStates();
             }
         }
 
-        function hideDetails() { document.getElementById('details').style.display = 'none'; }
+        function updateMenuStates() {
+            document.querySelectorAll("[data-scroll-target]").forEach((button) => {
+                button.classList.toggle("active", button.getAttribute("data-scroll-target") === activeScrollTarget);
+            });
+        }
     </script>
 </body>
 </html>

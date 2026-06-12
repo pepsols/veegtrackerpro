@@ -2,10 +2,12 @@ package com.example.veegtrackerpro.data.local.entities
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "tracking_points",
+    indices = [Index("routeId")],
     foreignKeys = [
         ForeignKey(
             entity = Route::class,

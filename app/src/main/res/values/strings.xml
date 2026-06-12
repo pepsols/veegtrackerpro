@@ -2,6 +2,9 @@
     <string name="app_name">Veegtracker Pro</string>
     <string name="role_chauffeur">Driver</string>
     <string name="role_admin">Central Control Room</string>
+    <string name="action_sign_in_google">Sign in with Google</string>
+    <string name="action_dev_bypass_driver">Dev bypass: driver</string>
+    <string name="action_dev_bypass_admin">Dev bypass: admin</string>
     <string name="action_start">Start</string>
     <string name="action_stop">Stop</string>
     <string name="action_export">Export</string>
@@ -25,6 +28,16 @@
     <string name="report_total_points">Total points: %d</string>
     <string name="report_summary">Summary: Route successfully completed.</string>
     <string name="label_route_progress">Route Progress: %d%%</string>
+    <string name="label_route_distance">Distance: %.1f km</string>
+    <string name="label_today_title">Today</string>
+    <string name="label_today_points">%1$d tracked / %2$d route points</string>
+    <string name="label_status_now">Now</string>
+    <string name="label_status_check">Check</string>
+    <string name="label_driver_note">Driver note</string>
+    <string name="action_add_new_photo">Add new photo</string>
+    <string name="action_replace_photo">Replace photo</string>
+    <string name="action_complete_point">Complete point</string>
+    <string name="action_skip_point">Skip point</string>
     <string name="instruction_continue">Continue straight</string>
     <string name="instruction_left">Turn left</string>
     <string name="instruction_right">Turn right</string>

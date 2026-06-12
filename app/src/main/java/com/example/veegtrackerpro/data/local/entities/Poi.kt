@@ -24,5 +24,12 @@ data class Poi(
     val latitude: Double,
     val longitude: Double,
     val description: String? = null,
+    val status: String = "open",
+    val actionTaken: String? = null,
+    val followUpAction: String? = null,
+    val imageUri: String? = null,
+    val photoUris: String? = null,
+    val workLog: String? = null,
+    val updatedAt: Long = System.currentTimeMillis(),
     val timestamp: Long = System.currentTimeMillis()
 )

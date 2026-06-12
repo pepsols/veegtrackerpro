@@ -28,6 +28,7 @@ import com.example.veegtrackerpro.ui.auth.AuthViewModel
 import com.example.veegtrackerpro.ui.auth.LoginScreen
 import com.example.veegtrackerpro.ui.profile.ProfileScreen
 import com.example.veegtrackerpro.util.AnalyticsHelper
+import com.example.veegtrackerpro.BuildConfig
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -48,10 +49,11 @@ fun MainContent() {
     val currentUser = authViewModel.currentUser
     val context = LocalContext.current
     val analytics = remember { AnalyticsHelper(context) }
+    val initialKey = if (currentUser == null && BuildConfig.DEBUG) DriverKey else if (currentUser == null) LoginKey else RoleSelectionKey
     
     val backStack = remember { 
         mutableStateListOf<NavKey>(
-            if (currentUser == null) LoginKey else RoleSelectionKey
+            initialKey
         ) 
     }
     
@@ -97,7 +99,7 @@ fun MainContent() {
                     selected = false,
                     onClick = {
                         scope.launch { drawerState.close() }
-                        authViewModel.signOut()
+                        authViewModel.signOut(context)
                         backStack.clear()
                         backStack.add(LoginKey)
                     },
@@ -122,6 +124,16 @@ fun MainContent() {
                                         backStack.add(RoleSelectionKey)
                                     }
                                 }
+                            },
+                            isLoading = authViewModel.isLoading,
+                            authError = authViewModel.authError,
+                            onDevBypassDriverClick = {
+                                backStack.clear()
+                                backStack.add(DriverKey)
+                            },
+                            onDevBypassAdminClick = {
+                                backStack.clear()
+                                backStack.add(AdminKey)
                             }
                         )
                     }

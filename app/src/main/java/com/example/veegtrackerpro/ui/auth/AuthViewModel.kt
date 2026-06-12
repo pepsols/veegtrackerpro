@@ -12,11 +12,14 @@ import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {
     private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
-    
+
     var currentUser: FirebaseUser? by mutableStateOf(null)
         private set
 
     var isLoading by mutableStateOf(false)
+        private set
+
+    var authError by mutableStateOf<String?>(null)
         private set
 
     init {
@@ -26,11 +29,13 @@ class AuthViewModel : ViewModel() {
     fun signIn(context: Context, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             isLoading = true
+            authError = null
             val helper = GoogleSignInHelper(context)
-            val user = helper.signIn()
-            currentUser = user
+            val result = helper.signIn()
+            currentUser = result.user
+            authError = result.errorMessage
             isLoading = false
-            onResult(user != null)
+            onResult(result.user != null)
         }
     }
 
@@ -38,8 +43,11 @@ class AuthViewModel : ViewModel() {
         currentUser = user
     }
 
-    fun signOut() {
-        auth.signOut()
-        currentUser = null
+    fun signOut(context: Context) {
+        viewModelScope.launch {
+            runCatching { GoogleSignInHelper(context).signOut() }
+            currentUser = null
+            authError = null
+        }
     }
 }

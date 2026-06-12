@@ -13,3 +13,16 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# AI tooling output
+.ai/
+
+# Local scratch Android project/workdir
+mobile/
+
+# Generated previews and downloads
+*.png
+*.zip
+
+# Vendored Python cache files
+tools/vendor/**/__pycache__/

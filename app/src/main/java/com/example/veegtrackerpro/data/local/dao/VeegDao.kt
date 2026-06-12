@@ -32,6 +32,9 @@ interface VeegDao {
     @Insert
     suspend fun insertPoi(poi: Poi)
 
+    @Update
+    suspend fun updatePoi(poi: Poi)
+
     @Delete
     suspend fun deletePoi(poi: Poi)
 

@@ -2,6 +2,9 @@
     <string name="app_name">Veegtracker Pro</string>
     <string name="role_chauffeur">Chauffeur</string>
     <string name="role_admin">Centrale Meldkamer</string>
+    <string name="action_sign_in_google">Inloggen met Google</string>
+    <string name="action_dev_bypass_driver">Dev bypass: chauffeur</string>
+    <string name="action_dev_bypass_admin">Dev bypass: admin</string>
     <string name="action_start">Start</string>
     <string name="action_stop">Stop</string>
     <string name="action_export">Exporteren</string>
@@ -25,6 +28,16 @@
     <string name="report_total_points">Totaal aantal punten: %d</string>
     <string name="report_summary">Samenvatting: Route succesvol voltooid.</string>
     <string name="label_route_progress">Route voortgang: %d%%</string>
+    <string name="label_route_distance">Afstand: %.1f km</string>
+    <string name="label_today_title">Vandaag</string>
+    <string name="label_today_points">%1$d geregistreerd / %2$d routepunten</string>
+    <string name="label_status_now">Nu</string>
+    <string name="label_status_check">Controle</string>
+    <string name="label_driver_note">Notitie chauffeur</string>
+    <string name="action_add_new_photo">Nieuwe foto toevoegen</string>
+    <string name="action_replace_photo">Foto vervangen</string>
+    <string name="action_complete_point">Punt afgerond</string>
+    <string name="action_skip_point">Overslaan</string>
     <string name="instruction_continue">Rechtdoor vervolgen</string>
     <string name="instruction_left">Sla linksaf</string>
     <string name="instruction_right">Sla rechtsaf</string>

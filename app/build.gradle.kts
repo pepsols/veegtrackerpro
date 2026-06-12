@@ -31,8 +31,10 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         val mapsApiKey = localProps.getProperty("MAPS_API_KEY") ?: ""
+        val googleWebClientId = localProps.getProperty("GOOGLE_WEB_CLIENT_ID") ?: ""
         manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
         buildConfigField("String", "MAPS_API_KEY", "\"$mapsApiKey\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
     }
 
     buildTypes {
