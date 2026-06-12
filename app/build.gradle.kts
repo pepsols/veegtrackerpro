@@ -1,6 +1,7 @@
 @file:Suppress("DEPRECATION")
 
 import java.util.Properties
+import com.google.firebase.appdistribution.gradle.firebaseAppDistribution
 
 val localProps = Properties().also { props ->
     val f = rootProject.file("local.properties")
@@ -119,6 +120,7 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.analytics)
+    implementation(libs.firebase.storage)
     implementation(libs.play.services.auth)
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.auth)

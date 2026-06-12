@@ -30,6 +30,7 @@ data class Poi(
     val imageUri: String? = null,
     val photoUris: String? = null,
     val workLog: String? = null,
+    val completedAt: Long? = null,
     val updatedAt: Long = System.currentTimeMillis(),
     val timestamp: Long = System.currentTimeMillis()
 )

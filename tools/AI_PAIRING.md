@@ -2,7 +2,7 @@
 
 Deze repo heeft nu simpele wrappers om Codex direct, en Codex + Gemini samen te gebruiken vanaf dezelfde workspace.
 
-Bestand:
+Bestanden:
 
 - `tools/codex.ps1`
 - `tools/codex-gemini.ps1`

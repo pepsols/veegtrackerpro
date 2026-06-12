@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -35,6 +36,7 @@ import coil.compose.AsyncImage
 import com.example.veegtrackerpro.R
 import com.example.veegtrackerpro.data.local.entities.Poi
 import com.example.veegtrackerpro.data.local.entities.Route
+import com.example.veegtrackerpro.data.media.MarkerPhotoResolver
 import com.example.veegtrackerpro.ui.components.VeegMap
 import org.osmdroid.util.GeoPoint
 import java.text.SimpleDateFormat
@@ -137,8 +139,10 @@ fun RouteListPane(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onImportGpx) {
-                        Icon(Icons.Default.Add, contentDescription = "Add Route")
+                    FilledTonalButton(onClick = onImportGpx) {
+                        Icon(Icons.Default.FileUpload, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Importeer GPX")
                     }
                 }
             )
@@ -162,44 +166,70 @@ fun RouteListPane(
                 }
             }
 
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(routes) { route ->
-                    val isSelected = route.id == selectedRouteId
-                    ListItem(
-                        headlineContent = { Text(route.name, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
-                        supportingContent = {
-                            val date = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date(route.createdAt))
-                            Text(date)
-                        },
-                        leadingContent = {
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                            ) {
-                                if (route.imageUri != null) {
-                                    AsyncImage(
-                                        model = route.imageUri,
-                                        contentDescription = null,
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                } else {
-                                    Icon(
-                                        Icons.Default.Route, 
-                                        contentDescription = null, 
-                                        modifier = Modifier.align(Alignment.Center)
-                                    )
+            if (routes.isEmpty()) {
+                Card(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text("Nog geen routes beschikbaar", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text("Importeer een GPX-bestand om een route met kaartpunten en planning te laden.")
+                        FilledTonalButton(onClick = onImportGpx) {
+                            Icon(Icons.Default.FileUpload, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Eerste GPX importeren")
+                        }
+                    }
+                }
+            } else {
+                val configuration = LocalConfiguration.current
+                val locale = configuration.locales[0]
+                val dateFormatter = remember(locale) { java.text.SimpleDateFormat("dd-MM-yyyy", locale) }
+
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(routes) { route ->
+                        val isSelected = route.id == selectedRouteId
+                        ListItem(
+                            headlineContent = { Text(route.name, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
+                            supportingContent = {
+                                val date = dateFormatter.format(Date(route.createdAt))
+                                Text(date)
+                            },
+                            leadingContent = {
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                                ) {
+                                    if (route.imageUri != null) {
+                                        AsyncImage(
+                                            model = route.imageUri,
+                                            contentDescription = null,
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    } else {
+                                        Icon(
+                                            Icons.Default.Route,
+                                            contentDescription = null,
+                                            modifier = Modifier.align(Alignment.Center)
+                                        )
+                                    }
                                 }
-                            }
-                        },
-                        colors = ListItemDefaults.colors(
-                            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else Color.Transparent
-                        ),
-                        modifier = Modifier.clickable { onRouteSelected(route) }
-                    )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                            },
+                            colors = ListItemDefaults.colors(
+                                containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else Color.Transparent
+                            ),
+                            modifier = Modifier.clickable { onRouteSelected(route) }
+                        )
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                    }
                 }
             }
         }
@@ -233,6 +263,10 @@ fun RouteDetailPane(
         return
     }
 
+    val configuration = LocalConfiguration.current
+    val locale = configuration.locales[0]
+    val dateFormatter = remember(locale) { SimpleDateFormat("dd-MM-yyyy HH:mm", locale) }
+
     val imageLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -240,6 +274,8 @@ fun RouteDetailPane(
     }
 
     var commentText by remember(route.id) { mutableStateOf(route.comments ?: "") }
+    var showDeleteRouteDialog by remember(route.id) { mutableStateOf(false) }
+    var poiPendingDelete by remember(route.id) { mutableStateOf<Poi?>(null) }
 
     Scaffold(
         topBar = {
@@ -258,7 +294,7 @@ fun RouteDetailPane(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Rapport")
                     }
-                    IconButton(onClick = { onDelete(route) }) {
+                    IconButton(onClick = { showDeleteRouteDialog = true }) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
                     }
                 }
@@ -286,7 +322,7 @@ fun RouteDetailPane(
                 }
 
                 Text(
-                    "Tip: Houd de kaart lang ingedrukt om een onkruidlocatie toe te voegen.",
+                    "Tip: houd de kaart lang ingedrukt om een punt toe te voegen. Verwijderen vraagt altijd eerst om bevestiging.",
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
@@ -310,7 +346,7 @@ fun RouteDetailPane(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text("Datum", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                            val date = SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault()).format(Date(route.createdAt))
+                            val date = dateFormatter.format(Date(route.createdAt))
                             Text(date)
                         }
                     }
@@ -327,14 +363,30 @@ fun RouteDetailPane(
                     minLines = 5
                 )
                 
+                val detailContext = LocalContext.current
                 if (pois.isNotEmpty()) {
                     Text("Objecten op route", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(16.dp))
                     pois.forEach { poi ->
+                        val poiPreview = remember(poi.id, poi.type, poi.description, poi.imageUri, poi.photoUris) {
+                            MarkerPhotoResolver.resolvePoiPreviewUri(detailContext, poi)
+                        }
                         ListItem(
+                            leadingContent = {
+                                poiPreview?.let { previewUri ->
+                                    AsyncImage(
+                                        model = previewUri,
+                                        contentDescription = "Miniatuur van ${poi.type}",
+                                        modifier = Modifier
+                                            .size(56.dp)
+                                            .clip(RoundedCornerShape(14.dp)),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            },
                             headlineContent = { Text(poi.type) },
                             supportingContent = { Text("${poi.latitude}, ${poi.longitude}") },
                             trailingContent = {
-                                IconButton(onClick = { onDeletePoi(poi) }) {
+                                IconButton(onClick = { poiPendingDelete = poi }) {
                                     Icon(Icons.Default.Close, contentDescription = "Delete POI")
                                 }
                             }
@@ -363,5 +415,53 @@ fun RouteDetailPane(
                 }
             }
         }
+    }
+
+    if (showDeleteRouteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteRouteDialog = false },
+            title = { Text("Route verwijderen?") },
+            text = { Text("Deze route, gekoppelde punten en voortgang verdwijnen uit het beheer. Controleer eerst of je echt wilt verwijderen.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteRouteDialog = false
+                        onDelete(route)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Verwijderen")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteRouteDialog = false }) {
+                    Text("Annuleren")
+                }
+            }
+        )
+    }
+
+    poiPendingDelete?.let { poi ->
+        AlertDialog(
+            onDismissRequest = { poiPendingDelete = null },
+            title = { Text("Punt verwijderen?") },
+            text = { Text("Punt \"${poi.type}\" wordt verwijderd uit deze route. Deze actie is niet direct terug te draaien.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDeletePoi(poi)
+                        poiPendingDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Verwijderen")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { poiPendingDelete = null }) {
+                    Text("Annuleren")
+                }
+            }
+        )
     }
 }

@@ -15,6 +15,12 @@ data object LoginKey : NavKey
 data object DriverKey : NavKey
 
 @Serializable
+data object DashboardTasksKey : NavKey
+
+@Serializable
+data object DriverWorkLogKey : NavKey
+
+@Serializable
 data object AdminKey : NavKey
 
 @Serializable

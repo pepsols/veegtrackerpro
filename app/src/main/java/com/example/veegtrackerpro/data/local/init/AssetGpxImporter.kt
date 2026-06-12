@@ -6,6 +6,7 @@ import com.example.veegtrackerpro.data.gpx.parser.GpxParser
 import com.example.veegtrackerpro.data.local.VeegDatabase
 import com.example.veegtrackerpro.data.local.entities.Poi
 import com.example.veegtrackerpro.data.local.entities.Route
+import com.example.veegtrackerpro.data.media.MarkerPhotoResolver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -45,7 +46,12 @@ class AssetGpxImporter(private val context: Context, private val database: VeegD
                                             type = wpt.name ?: "Object",
                                             latitude = wpt.lat,
                                             longitude = wpt.lon,
-                                            description = wpt.desc ?: "Geïmporteerd uit $fileName"
+                                            description = wpt.desc ?: "Geïmporteerd uit $fileName",
+                                            imageUri = MarkerPhotoResolver.resolveMarkerAssetUri(
+                                                context = context,
+                                                type = wpt.name ?: "Object",
+                                                description = wpt.desc ?: "Geïmporteerd uit $fileName"
+                                            )
                                         )
                                     )
                                 }

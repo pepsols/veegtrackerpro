@@ -155,13 +155,29 @@ private fun markerLabelFor(poi: Poi): String {
     return when (poi.status.lowercase()) {
         "afgerond" -> "OK"
         "overgeslagen" -> "!"
-        else -> when (poi.type.lowercase()) {
-            "onkruid" -> "W"
-            "obstakel" -> "O"
-            "schade" -> "S"
+        else -> when {
+            isWeedMaintenancePoi(poi) -> "W"
+            poi.type.lowercase() == "obstakel" -> "O"
+            poi.type.lowercase() == "schade" -> "S"
             else -> "P"
         }
     }
+}
+
+private fun isWeedMaintenancePoi(poi: Poi): Boolean {
+    val signal = buildString {
+        append(poi.type.lowercase())
+        append(' ')
+        append(poi.description.orEmpty().lowercase())
+    }
+    return signal.contains("onkruid")
+        || signal.contains("weed")
+        || signal.contains("geleider")
+        || signal.contains("middengeleider")
+        || signal.contains("verkeersgeleider")
+        || signal.contains("oversteekplaats")
+        || signal.contains("zebrapad")
+        || signal.contains("verkeerseiland")
 }
 
 private fun markerColorFor(poi: Poi): Int {

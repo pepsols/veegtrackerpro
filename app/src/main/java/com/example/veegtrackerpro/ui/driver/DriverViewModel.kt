@@ -2,7 +2,9 @@ package com.example.veegtrackerpro.ui.driver
 
 import android.app.Application
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import androidx.core.content.ContextCompat
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -13,6 +15,13 @@ import com.example.veegtrackerpro.data.gpx.parser.GpxParser
 import com.example.veegtrackerpro.data.local.entities.Poi
 import com.example.veegtrackerpro.data.local.entities.Route
 import com.example.veegtrackerpro.service.TrackingService
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.firebase.storage.FirebaseStorage
 import org.osmdroid.util.GeoPoint
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +31,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import android.Manifest
 import java.io.InputStream
 import kotlin.math.roundToInt
 
@@ -35,10 +46,20 @@ data class DriverTodayState(
     val isTracking: Boolean = false
 )
 
+data class NearbyRouteSuggestion(
+    val route: Route,
+    val distanceToRouteMeters: Int,
+    val distanceToStartMeters: Int
+)
+
 class DriverViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = (application as VeegApplication).database
     private val gpxParser = GpxParser()
+    private val storage = FirebaseStorage.getInstance()
+    private val fusedLocationClient: FusedLocationProviderClient =
+        LocationServices.getFusedLocationProviderClient(application)
+    private val routeGeometryCache = mutableMapOf<Long, List<GeoPoint>>()
 
     var isTracking by mutableStateOf(false)
         private set
@@ -73,9 +94,26 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
     private val _todayState = MutableStateFlow(DriverTodayState())
     val todayState: StateFlow<DriverTodayState> = _todayState
 
+    private val _currentLocation = MutableStateFlow<GeoPoint?>(null)
+    val currentLocation: StateFlow<GeoPoint?> = _currentLocation
+
+    private val _nearbyRouteSuggestion = MutableStateFlow<NearbyRouteSuggestion?>(null)
+    val nearbyRouteSuggestion: StateFlow<NearbyRouteSuggestion?> = _nearbyRouteSuggestion
+
     private var currentRouteId: Long = -1
     private var trackingObservationJob: Job? = null
     private var poiObservationJob: Job? = null
+    private var isLocationAwarenessStarted = false
+
+    private val passiveLocationCallback = object : LocationCallback() {
+        override fun onLocationResult(locationResult: LocationResult) {
+            locationResult.lastLocation?.let { location ->
+                _currentLocation.value = GeoPoint(location.latitude, location.longitude)
+                updateNearbyRouteSuggestion()
+                updateTodayState()
+            }
+        }
+    }
 
     init {
         viewModelScope.launch {
@@ -93,13 +131,24 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
                         poiObservationJob?.cancel()
                         updateTodayState()
                     }
-                    currentSelection == null -> selectRoute(prioritizedRoute(routes))
-                    routes.none { it.id == currentSelection.id } -> selectRoute(prioritizedRoute(routes))
+                    currentSelection == null -> updateTodayState()
+                    routes.none { it.id == currentSelection.id } -> {
+                        currentRouteId = -1
+                        _selectedRoute.value = null
+                        _routePoints.value = emptyList()
+                        _trackingPoints.value = emptyList()
+                        _currentInstruction.value = ""
+                        _progress.value = 0
+                        trackingObservationJob?.cancel()
+                        poiObservationJob?.cancel()
+                        updateTodayState()
+                    }
                     else -> {
                         _selectedRoute.value = routes.first { it.id == currentSelection.id }
                         updateTodayState()
                     }
                 }
+                updateNearbyRouteSuggestion()
             }
         }
     }
@@ -125,6 +174,7 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
                 currentRouteId = routeId
                 _selectedRoute.value = savedRoute
                 _routePoints.value = points
+                routeGeometryCache[routeId] = points
                 _trackingPoints.value = emptyList()
                 _currentInstruction.value = "Start de ritregistratie"
                 _progress.value = 0
@@ -216,23 +266,51 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
         return a
     }
 
-    fun selectRoute(route: Route) {
+    fun selectRoute(route: Route, navigateToStart: Boolean = false) {
         viewModelScope.launch {
-            currentRouteId = route.id
-            _selectedRoute.value = route
-            _trackingPoints.value = emptyList()
-            _currentInstruction.value = "Route geladen"
-            _progress.value = 0
-            
-            // Parse the stored GPX data to show the route polyline
-            if (route.gpxData.isNotEmpty()) {
-                _routePoints.value = parseRoutePoints(route.gpxData)
-            } else {
-                _routePoints.value = emptyList()
-            }
+            applyRouteSelection(route, navigateToStart)
+        }
+    }
 
-            observeTrackingPoints(route.id)
-            updateTodayState()
+    fun startSuggestedRoute(route: Route) {
+        viewModelScope.launch {
+            applyRouteSelection(route, navigateToStart = false)
+            if (!isTracking) {
+                toggleTracking()
+            }
+            _nearbyRouteSuggestion.value = null
+        }
+    }
+
+    fun dismissRouteSuggestion() {
+        _nearbyRouteSuggestion.value = null
+    }
+
+    fun startLocationAwareness() {
+        if (isLocationAwarenessStarted) return
+        val app = getApplication<Application>()
+        val fineGranted = ContextCompat.checkSelfPermission(app, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val coarseGranted = ContextCompat.checkSelfPermission(app, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        if (!fineGranted && !coarseGranted) return
+        isLocationAwarenessStarted = true
+
+        runCatching {
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                location?.let {
+                    _currentLocation.value = GeoPoint(it.latitude, it.longitude)
+                    updateNearbyRouteSuggestion()
+                    updateTodayState()
+                }
+            }
+            fusedLocationClient.requestLocationUpdates(
+                LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, 10_000L)
+                    .setMinUpdateIntervalMillis(4_000L)
+                    .build(),
+                passiveLocationCallback,
+                getApplication<Application>().mainLooper
+            )
+        }.onFailure {
+            isLocationAwarenessStarted = false
         }
     }
 
@@ -264,7 +342,7 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
     ) {
         viewModelScope.launch {
             val timestamp = System.currentTimeMillis()
-            val normalizedPhotos = photoUris.map(Uri::toString).distinct()
+            val normalizedPhotos = uploadOrReusePhotoUris(poi, photoUris, timestamp)
             val logEntry = buildString {
                 append(formatTimestamp(timestamp))
                 append(" - ")
@@ -293,10 +371,33 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
                 imageUri = normalizedPhotos.firstOrNull() ?: poi.imageUri,
                 photoUris = normalizedPhotos.takeIf { it.isNotEmpty() }?.joinToString(separator = "\n") ?: poi.photoUris,
                 workLog = mergedLog,
+                completedAt = if (status.equals("afgerond", ignoreCase = true)
+                    || status.equals("done", ignoreCase = true)
+                    || status.equals("closed", ignoreCase = true)
+                ) timestamp else poi.completedAt,
                 updatedAt = timestamp
             )
             db.veegDao().updatePoi(updatedPoi)
         }
+    }
+
+    private suspend fun uploadOrReusePhotoUris(
+        poi: Poi,
+        photoUris: List<Uri>,
+        timestamp: Long
+    ): List<String> {
+        return photoUris.mapIndexedNotNull { index, uri ->
+            val rawValue = uri.toString()
+            when {
+                rawValue.startsWith("http://", ignoreCase = true) || rawValue.startsWith("https://", ignoreCase = true) -> rawValue
+                else -> runCatching {
+                    val ref = storage.reference
+                        .child("poi-photos/${poi.routeId}/${poi.id}/$timestamp-$index.jpg")
+                    ref.putFile(uri).await()
+                    ref.downloadUrl.await().toString()
+                }.getOrElse { rawValue }
+            }
+        }.distinct()
     }
 
     private fun parseRoutePoints(gpxData: String): List<GeoPoint> {
@@ -310,14 +411,7 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun hasRouteGeometry(route: Route): Boolean {
         if (route.gpxData.isBlank()) return false
-        return parseRoutePoints(route.gpxData).isNotEmpty()
-    }
-
-    private fun prioritizedRoute(routes: List<Route>): Route {
-        return routes.sortedWith(
-            compareByDescending<Route> { it.gpxData.contains("<wpt", ignoreCase = true) }
-                .thenByDescending { it.createdAt }
-        ).first()
+        return routeGeometry(route).isNotEmpty()
     }
 
     private fun formatTimestamp(timestamp: Long): String {
@@ -335,10 +429,15 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
         val selectedRoute = _selectedRoute.value
         val routePoints = _routePoints.value
         val trackedPoints = _trackingPoints.value
+        val currentLocation = _currentLocation.value
+        val startDistance = if (selectedRoute != null && routePoints.isNotEmpty() && currentLocation != null) {
+            currentLocation.distanceToAsDouble(routePoints.first()).roundToInt()
+        } else null
         val blocker = when {
             selectedRoute == null -> "Kies een route om te beginnen"
             routePoints.isEmpty() -> "Routegegevens ontbreken nog"
             isTracking && trackedPoints.isEmpty() -> "Wachten op GPS-signaal"
+            !isTracking && trackedPoints.isEmpty() && startDistance != null -> "Startpunt ligt op ${startDistance} m"
             !isTracking && trackedPoints.isEmpty() -> "Tracking is nog niet gestart"
             !isTracking && trackedPoints.isNotEmpty() && _progress.value < 100 -> "Route is gepauzeerd"
             else -> null
@@ -348,6 +447,7 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
             routePoints.isEmpty() -> "Importeer of herlaad de route"
             isTracking && _currentInstruction.value.isNotBlank() -> _currentInstruction.value
             isTracking -> "Volg de route"
+            trackedPoints.isEmpty() && startDistance != null -> "Navigeer naar startpunt of start direct vanaf je positie"
             trackedPoints.isEmpty() -> "Start de ritregistratie"
             _progress.value >= 100 -> "Controleer en rond de route af"
             else -> "Hervat de route wanneer je verder gaat"
@@ -362,5 +462,90 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
             totalRoutePoints = routePoints.size,
             isTracking = isTracking
         )
+    }
+
+    private fun updateNearbyRouteSuggestion() {
+        if (isTracking) {
+            _nearbyRouteSuggestion.value = null
+            return
+        }
+        val location = _currentLocation.value ?: return
+        val routes = availableRoutes.value
+        val suggestion = routes
+            .mapNotNull { route ->
+                val points = routeGeometry(route)
+                val startPoint = points.firstOrNull() ?: return@mapNotNull null
+                val nearestMeters = points.minOfOrNull { point -> location.distanceToAsDouble(point) }?.roundToInt() ?: return@mapNotNull null
+                val startMeters = location.distanceToAsDouble(startPoint).roundToInt()
+                if (nearestMeters > 120 && startMeters > 250) return@mapNotNull null
+                NearbyRouteSuggestion(route, nearestMeters, startMeters)
+            }
+            .sortedWith(compareBy<NearbyRouteSuggestion> { it.distanceToRouteMeters }.thenBy { it.distanceToStartMeters })
+            .firstOrNull()
+
+        val selected = _selectedRoute.value
+        _nearbyRouteSuggestion.value = when {
+            suggestion == null -> null
+            selected?.id == suggestion.route.id -> null
+            else -> suggestion
+        }
+    }
+
+    private fun routeGeometry(route: Route): List<GeoPoint> {
+        return routeGeometryCache.getOrPut(route.id) {
+            if (route.gpxData.isBlank()) emptyList() else parseRoutePoints(route.gpxData)
+        }
+    }
+
+    private suspend fun applyRouteSelection(route: Route, navigateToStart: Boolean) {
+        currentRouteId = route.id
+        _selectedRoute.value = route
+        _trackingPoints.value = emptyList()
+        _progress.value = 0
+
+        if (route.gpxData.isNotEmpty()) {
+            val points = parseRoutePoints(route.gpxData)
+            routeGeometryCache[route.id] = points
+            _routePoints.value = points
+        } else {
+            _routePoints.value = emptyList()
+        }
+
+        val startPoint = _routePoints.value.firstOrNull()
+        _currentInstruction.value = when {
+            navigateToStart && startPoint != null -> "Navigeer naar startpunt"
+            else -> "Route geladen"
+        }
+        if (navigateToStart && startPoint != null) {
+            launchNavigationTo(startPoint)
+        }
+
+        observeTrackingPoints(route.id)
+        updateNearbyRouteSuggestion()
+        updateTodayState()
+    }
+
+    private fun launchNavigationTo(point: GeoPoint) {
+        val app = getApplication<Application>()
+        val uri = Uri.parse("google.navigation:q=${point.latitude},${point.longitude}&mode=b")
+        val intent = Intent(Intent.ACTION_VIEW, uri).apply {
+            setPackage("com.google.android.apps.maps")
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        val fallbackIntent = Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("geo:${point.latitude},${point.longitude}?q=${point.latitude},${point.longitude}(Startpunt route)")
+        ).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        runCatching { app.startActivity(intent) }
+            .recoverCatching { app.startActivity(fallbackIntent) }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        if (isLocationAwarenessStarted) {
+            fusedLocationClient.removeLocationUpdates(passiveLocationCallback)
+        }
     }
 }

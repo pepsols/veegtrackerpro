@@ -32,12 +32,24 @@ interface VeegDao {
     @Insert
     suspend fun insertPoi(poi: Poi)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertPoi(poi: Poi)
+
     @Update
     suspend fun updatePoi(poi: Poi)
 
     @Delete
     suspend fun deletePoi(poi: Poi)
 
+    @Query("DELETE FROM pois WHERE id = :poiId")
+    suspend fun deletePoiById(poiId: Long)
+
     @Query("SELECT * FROM pois WHERE routeId = :routeId ORDER BY timestamp DESC")
     fun getPoisForRoute(routeId: Long): Flow<List<Poi>>
+
+    @Query("SELECT * FROM pois ORDER BY updatedAt DESC")
+    fun getAllPois(): Flow<List<Poi>>
+
+    @Query("SELECT * FROM pois WHERE id = :poiId LIMIT 1")
+    suspend fun getPoiById(poiId: Long): Poi?
 }

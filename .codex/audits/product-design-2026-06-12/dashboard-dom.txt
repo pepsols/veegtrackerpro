@@ -1,0 +1,77 @@
+- complementary:
+  - strong: Veegtracker Pro
+  - generic: Desktopnavigatie voor routes, meldingen, planning en uitzonderingen.
+  - navigation:
+    - button " Overzicht KPI's en live status":
+      - generic: 
+      - text: Overzicht
+      - text: KPI's en live status
+    - button " Kaart Routes en punten":
+      - generic: 
+      - text: Kaart
+      - text: Routes en punten
+    - button " Routes Routeoverzicht":
+      - generic: 
+      - text: Routes
+      - text: Routeoverzicht
+    - button " Planning Taken en AI":
+      - generic: 
+      - text: Planning
+      - text: Taken en AI
+    - button " Meldingen Uitzonderingen":
+      - generic: 
+      - text: Meldingen
+      - text: Uitzonderingen
+- generic: 
+- generic: Centrale meldkamer live
+- heading "Veegtracker Pro dashboard voor planning, operatie en opvolging" [level=1]
+- paragraph: "Dit dashboard laat je actuele routes, meldingen en taken in een vaste werkindeling zien. Ontworpen voor tablet en pc: kaart links, context rechts en daaronder directe lijsten uit je eigen Firestore-data."
+- generic: 
+- strong: Sync
+- generic: Live verbonden
+- generic: 
+- strong: Laatste update
+- generic: 12 jun 2026, 13:51
+- generic: 
+- strong: Gebied
+- combobox:
+  - option "Alle gebieden" [selected]
+  - option "2 Parels"
+  - option "fietspaden"
+  - option "DOORN"
+  - option "Fietspad en rijbaan"
+  - option "Korte dreef"
+  - option "markers 2026"
+  - option "Oranjevijver"
+  - option "Rosarium"
+- generic: 
+- strong: Status
+- combobox:
+  - option "Alles" [selected]
+  - option "Open"
+  - option "Afgerond"
+  - option "Onkruid"
+- button "+ Nieuwe taak":
+  - generic: +
+  - generic: Nieuwe taak
+- button " Focus laatste melding":
+  - generic: 
+  - generic: Focus laatste melding
+- article:
+  - generic: Nu actie
+  - generic: "1"
+  - generic: 1 taak/taken direct zichtbaar in planning.
+- article:
+  - generic: Controle
+  - generic: "34"
+  - generic: Recente meldingen uit de laatste 24 uur vragen beoordeling.
+- article:
+  - generic: Operatie
+  - generic: "20"
+  - generic: "Laatste route: 2 Parels + fietspaden"
+- article:
+  - generic: AI / planning
+  - generic: "1"
+  - generic: AI-signalen op basis van meldingen en achterstanden.
+- text:                                                                        +
+- text:   

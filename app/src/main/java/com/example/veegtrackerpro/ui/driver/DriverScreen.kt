@@ -13,7 +13,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -69,7 +68,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -88,6 +86,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.veegtrackerpro.R
 import com.example.veegtrackerpro.data.local.entities.Poi
+import com.example.veegtrackerpro.data.media.MarkerPhotoResolver
 import com.example.veegtrackerpro.ui.components.VeegMap
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -105,20 +104,17 @@ fun DriverScreen(
     val availableRoutes by viewModel.availableRoutes.collectAsState()
     val selectedRoute by viewModel.selectedRoute.collectAsState()
     val todayState by viewModel.todayState.collectAsState()
+    val nearbyRouteSuggestion by viewModel.nearbyRouteSuggestion.collectAsState()
     var showRoutePicker by remember { mutableStateOf(false) }
     var selectedPoi by remember { mutableStateOf<Poi?>(null) }
+    var showPermissionIntro by rememberSaveable { mutableStateOf(true) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { }
-
-    LaunchedEffect(Unit) {
-        permissionLauncher.launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            )
-        )
+    ) { permissions ->
+        if (permissions.values.any { it }) {
+            viewModel.startLocationAwareness()
+        }
     }
 
     val gpxLauncher = rememberLauncherForActivityResult(
@@ -129,6 +125,10 @@ fun DriverScreen(
                 viewModel.importGpx(stream)
             }
         }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.startLocationAwareness()
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -147,7 +147,9 @@ fun DriverScreen(
                 .statusBarsPadding()
                 .padding(top = 76.dp, start = 16.dp, end = 16.dp),
             state = todayState,
-            currentInstruction = currentInstruction
+            currentInstruction = currentInstruction,
+            onPickRoute = { showRoutePicker = true },
+            onImportGpx = { gpxLauncher.launch("*/*") }
         )
 
         StatusTopBar(
@@ -155,15 +157,6 @@ fun DriverScreen(
                 .align(Alignment.TopCenter)
                 .statusBarsPadding(),
             onOpenMenu = onOpenMenu
-        )
-
-        DriverControls(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .statusBarsPadding()
-                .padding(top = 352.dp, start = 16.dp),
-            onImportGpx = { gpxLauncher.launch("*/*") },
-            onPickRoute = { showRoutePicker = true }
         )
 
         BottomActionBar(
@@ -197,7 +190,7 @@ fun DriverScreen(
                                     }
                                 },
                                 modifier = Modifier.clickable {
-                                    viewModel.selectRoute(route)
+                                    viewModel.selectRoute(route, navigateToStart = true)
                                     showRoutePicker = false
                                 },
                                 trailingContent = {
@@ -212,6 +205,71 @@ fun DriverScreen(
                 confirmButton = {
                     TextButton(onClick = { showRoutePicker = false }) {
                         Text("Sluiten")
+                    }
+                }
+            )
+        }
+
+        if (showPermissionIntro) {
+            AlertDialog(
+                onDismissRequest = { showPermissionIntro = false },
+                title = { Text("Locatie nodig voor routevolging") },
+                text = {
+                    Text("De chauffeurskaart gebruikt je locatie om voortgang, navigatie en GPS-volging te tonen tijdens de rit.")
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showPermissionIntro = false
+                            permissionLauncher.launch(
+                                arrayOf(
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                )
+                            )
+                        }
+                    ) {
+                        Text("Locatie toestaan")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showPermissionIntro = false }) {
+                        Text("Later")
+                    }
+                }
+            )
+        }
+
+        nearbyRouteSuggestion?.let { suggestion ->
+            AlertDialog(
+                onDismissRequest = { viewModel.dismissRouteSuggestion() },
+                title = { Text("Route in de buurt gevonden") },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Je bent dicht bij ${suggestion.route.name}. Wil je deze route starten?")
+                        Text(
+                            text = "Route op ${suggestion.distanceToRouteMeters} m, startpunt op ${suggestion.distanceToStartMeters} m.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = { viewModel.startSuggestedRoute(suggestion.route) }) {
+                        Text("Start route")
+                    }
+                },
+                dismissButton = {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick = {
+                            viewModel.selectRoute(suggestion.route, navigateToStart = true)
+                            viewModel.dismissRouteSuggestion()
+                        }) {
+                            Text("Naar startpunt")
+                        }
+                        TextButton(onClick = { viewModel.dismissRouteSuggestion() }) {
+                            Text("Later")
+                        }
                     }
                 }
             )
@@ -245,6 +303,8 @@ fun DriverScreen(
 fun TodaySummaryCard(
     state: DriverTodayState,
     currentInstruction: String,
+    onPickRoute: () -> Unit,
+    onImportGpx: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -367,6 +427,28 @@ fun TodaySummaryCard(
                     trackColor = MaterialTheme.colorScheme.primaryContainer
                 )
             }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onPickRoute,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.Map, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(if (state.routeName == null) "Kies route" else "Wijzig route")
+                }
+                OutlinedButton(
+                    onClick = onImportGpx,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.FileUpload, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Importeer GPX")
+                }
+            }
         }
     }
 }
@@ -450,11 +532,16 @@ fun PoiActionSheet(
     onDismiss: () -> Unit,
     onSave: (status: String, actionTaken: String, followUpAction: String, note: String, photoUris: List<Uri>) -> Unit
 ) {
+    val context = LocalContext.current
     val statusOptions = listOf("afgerond", "overgeslagen", "vervolg nodig")
     val actionOptions = listOf("Onkruid verwijderd", "Obstakel gecontroleerd", "Schade vastgelegd", "Punt niet bereikbaar")
     val followUpOptions = listOf("Geen vervolg nodig", "Nieuwe controle nodig", "Monteur of team nodig")
-    val initialPhotoUris = remember(poi.id, poi.photoUris, poi.imageUri) { parseStoredPhotoUris(poi).map(Uri::parse) }
-    var currentStep by rememberSaveable(poi.id) { mutableIntStateOf(0) }
+    val referencePreviewUri = remember(poi.id, poi.type, poi.description, poi.imageUri, poi.photoUris) {
+        MarkerPhotoResolver.resolvePoiPreviewUri(context, poi)
+    }
+    val initialPhotoUris = remember(poi.id, poi.photoUris, poi.imageUri) {
+        MarkerPhotoResolver.storedPhotoUris(poi).map(Uri::parse)
+    }
     var selectedStatus by rememberSaveable(poi.id) {
         mutableStateOf(if (poi.status == "open") "" else poi.status)
     }
@@ -469,13 +556,7 @@ fun PoiActionSheet(
             photoUris = (photoUris + uris).distinctBy(Uri::toString)
         }
     }
-    val steps = listOf("Status", "Actie", "Vervolg", "Notitie", "Foto's", "Opslaan")
-    val canContinue = when (currentStep) {
-        0 -> selectedStatus.isNotBlank()
-        1 -> selectedAction.isNotBlank()
-        2 -> selectedFollowUp.isNotBlank()
-        else -> true
-    }
+    val canSave = selectedStatus.isNotBlank()
 
     Column(
         modifier = Modifier
@@ -487,16 +568,14 @@ fun PoiActionSheet(
     ) {
         Text(text = poi.type, style = MaterialTheme.typography.headlineSmall)
         Text(
-            text = "Punt ${currentStep + 1} van ${steps.size}: ${steps[currentStep]}",
+            text = "Werk dit punt direct bij",
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary
         )
-        LinearProgressIndicator(
-            progress = { (currentStep + 1) / steps.size.toFloat() },
-            modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.primary,
-            trackColor = MaterialTheme.colorScheme.primaryContainer
-        )
+
+        referencePreviewUri?.let { previewUri ->
+            ReferencePreviewCard(previewUri = previewUri)
+        }
 
         if (!poi.workLog.isNullOrBlank()) {
             Surface(
@@ -511,60 +590,81 @@ fun PoiActionSheet(
             }
         }
 
-        when (currentStep) {
-            0 -> StepChoiceList(
-                title = "Wat is de status van dit punt?",
-                subtitle = "Kies één status voordat je verdergaat.",
-                options = statusOptions,
-                selected = selectedStatus,
-                onSelect = { selectedStatus = it }
-            )
-            1 -> StepChoiceList(
-                title = "Wat heb je hier gedaan?",
-                subtitle = "Kies de actie die het best past bij dit punt.",
-                options = actionOptions,
-                selected = selectedAction,
-                onSelect = { selectedAction = it }
-            )
-            2 -> StepChoiceList(
-                title = "Is vervolg nodig?",
-                subtitle = "Leg vast of dit punt nog opvolging nodig heeft.",
-                options = followUpOptions,
-                selected = selectedFollowUp,
-                onSelect = { selectedFollowUp = it }
-            )
-            3 -> OutlinedTextField(
-                value = note,
-                onValueChange = { note = it },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Notitie chauffeur") },
-                placeholder = { Text("Bijvoorbeeld wat je hebt gezien of aangepast") },
-                minLines = 4
-            )
-            4 -> PhotoStep(
-                photoUris = photoUris,
-                onAddPhotos = { imagePicker.launch("image/*") },
-                onRemovePhoto = { index ->
-                    photoUris = photoUris.filterIndexed { currentIndex, _ -> currentIndex != index }
+        if (poi.completedAt != null) {
+            Surface(
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        text = "Laatst voltooid",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = formatPoiMoment(poi.completedAt),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
-            )
-            else -> {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        SummaryRow("Status", selectedStatus)
-                        SummaryRow("Actie", selectedAction)
-                        SummaryRow("Vervolg", selectedFollowUp)
-                        SummaryRow("Notitie", note.ifBlank { "Geen notitie" })
-                        SummaryRow("Foto's", photoUris.size.toString())
-                    }
-                }
+            }
+        }
+
+        StepChoiceList(
+            title = "1. Status",
+            subtitle = "Dit veld is verplicht zodat de planning direct een uitkomst ziet.",
+            options = statusOptions,
+            selected = selectedStatus,
+            onSelect = { selectedStatus = it }
+        )
+
+        StepChoiceList(
+            title = "2. Wat heb je gedaan? (optioneel)",
+            subtitle = "Vul alleen in wat nu al nuttig is voor de terugkoppeling.",
+            options = actionOptions,
+            selected = selectedAction,
+            onSelect = { selectedAction = if (selectedAction == it) "" else it }
+        )
+
+        StepChoiceList(
+            title = "3. Vervolg nodig? (optioneel)",
+            subtitle = "Gebruik dit als een planner of collega later nog moet opvolgen.",
+            options = followUpOptions,
+            selected = selectedFollowUp,
+            onSelect = { selectedFollowUp = if (selectedFollowUp == it) "" else it }
+        )
+
+        OutlinedTextField(
+            value = note,
+            onValueChange = { note = it },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Notitie chauffeur (optioneel)") },
+            placeholder = { Text("Bijvoorbeeld wat je hebt gezien of aangepast") },
+            minLines = 3
+        )
+
+        PhotoStep(
+            photoUris = photoUris,
+            onAddPhotos = { imagePicker.launch("image/*") },
+            onRemovePhoto = { index ->
+                photoUris = photoUris.filterIndexed { currentIndex, _ -> currentIndex != index }
+            }
+        )
+
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                SummaryRow("Status", selectedStatus.ifBlank { "Nog niet gekozen" })
+                SummaryRow("Actie", selectedAction.ifBlank { "Niet ingevuld" })
+                SummaryRow("Vervolg", selectedFollowUp.ifBlank { "Niet ingevuld" })
+                SummaryRow("Notitie", note.ifBlank { "Geen notitie" })
+                SummaryRow("Foto's", photoUris.size.toString())
             }
         }
 
@@ -573,34 +673,51 @@ fun PoiActionSheet(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             OutlinedButton(
-                onClick = {
-                    if (currentStep == 0) onDismiss() else currentStep -= 1
-                },
+                onClick = onDismiss,
                 modifier = Modifier.weight(1f)
             ) {
-                Text(if (currentStep == 0) "Sluiten" else "Vorige")
+                Text("Sluiten")
             }
 
             Button(
                 onClick = {
-                    if (currentStep == steps.lastIndex) {
-                        onSave(
-                            selectedStatus,
-                            selectedAction,
-                            selectedFollowUp,
-                            note,
-                            photoUris
-                        )
-                    } else {
-                        currentStep += 1
-                    }
+                    onSave(
+                        selectedStatus,
+                        selectedAction,
+                        selectedFollowUp,
+                        note,
+                        photoUris
+                    )
                 },
-                enabled = canContinue,
+                enabled = canSave,
                 modifier = Modifier.weight(1f)
             ) {
-                Text(if (currentStep == steps.lastIndex) "Punt opslaan" else "Volgende")
+                Text("Punt opslaan")
             }
         }
+    }
+}
+
+@Composable
+private fun ReferencePreviewCard(previewUri: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = "Referentiefoto van marker",
+            style = MaterialTheme.typography.titleMedium
+        )
+        Image(
+            painter = rememberAsyncImagePainter(previewUri),
+            contentDescription = "Miniatuur van marker",
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(180.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .border(
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    shape = RoundedCornerShape(20.dp)
+                ),
+            contentScale = ContentScale.Crop
+        )
     }
 }
 
@@ -749,14 +866,9 @@ private fun SummaryRow(label: String, value: String) {
     }
 }
 
-private fun parseStoredPhotoUris(poi: Poi): List<String> {
-    return poi.photoUris
-        ?.lineSequence()
-        ?.map(String::trim)
-        ?.filter(String::isNotBlank)
-        ?.toList()
-        ?.takeIf { it.isNotEmpty() }
-        ?: listOfNotNull(poi.imageUri)
+private fun formatPoiMoment(timestamp: Long): String {
+    return java.text.SimpleDateFormat("dd-MM-yyyy HH:mm", java.util.Locale("nl", "NL"))
+        .format(java.util.Date(timestamp))
 }
 
 @Composable
@@ -807,54 +919,5 @@ fun StatusItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: Str
         Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
         Spacer(modifier = Modifier.width(4.dp))
         Text(text = label, style = MaterialTheme.typography.bodySmall)
-    }
-}
-
-@Composable
-fun DriverControls(
-    modifier: Modifier = Modifier,
-    onImportGpx: () -> Unit,
-    onPickRoute: () -> Unit
-) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        ControlToggle(
-            label = stringResource(R.string.label_follow),
-            icon = Icons.Default.Map,
-            isActive = false,
-            onClick = onPickRoute
-        )
-        FloatingActionButton(
-            onClick = onImportGpx,
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
-        ) {
-            Icon(Icons.Default.FileUpload, contentDescription = "Import GPX")
-        }
-    }
-}
-
-@Composable
-fun ControlToggle(
-    label: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    isActive: Boolean,
-    activeColor: Color = MaterialTheme.colorScheme.primary,
-    onClick: () -> Unit
-) {
-    Button(
-        onClick = onClick,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isActive) activeColor else MaterialTheme.colorScheme.surface,
-            contentColor = if (isActive) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-        ),
-        shape = RoundedCornerShape(8.dp),
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
-    ) {
-        Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text = label)
     }
 }

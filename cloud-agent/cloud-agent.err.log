@@ -1,0 +1,19 @@
+C:\Users\Nathan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\_default.py:113: UserWarning: Your application has authenticated using end user credentials from Google Cloud SDK without a quota project. You might receive a "quota exceeded" or "API not enabled" error. See the following page for troubleshooting: https://cloud.google.com/docs/authentication/adc-troubleshooting/user-creds. 
+  warnings.warn(_CLOUD_SDK_CREDENTIALS_WARNING)
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8080
+ * Running on http://192.168.2.32:8080
+Press CTRL+C to quit
+ * Restarting with stat
+C:\Users\Nathan\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\google\auth\_default.py:113: UserWarning: Your application has authenticated using end user credentials from Google Cloud SDK without a quota project. You might receive a "quota exceeded" or "API not enabled" error. See the following page for troubleshooting: https://cloud.google.com/docs/authentication/adc-troubleshooting/user-creds. 
+  warnings.warn(_CLOUD_SDK_CREDENTIALS_WARNING)
+ * Debugger is active!
+ * Debugger PIN: 132-638-243
+127.0.0.1 - - [13/Jun/2026 00:07:51] "GET /llm/providers HTTP/1.1" 200 -
+127.0.0.1 - - [13/Jun/2026 00:07:53] "GET /llm/probe HTTP/1.1" 503 -
+127.0.0.1 - - [13/Jun/2026 00:08:27] "GET /llm/providers HTTP/1.1" 200 -
+127.0.0.1 - - [13/Jun/2026 00:08:29] "GET /llm/probe HTTP/1.1" 503 -
+127.0.0.1 - - [13/Jun/2026 00:09:04] "GET /llm/probe HTTP/1.1" 503 -
+127.0.0.1 - - [13/Jun/2026 00:09:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [13/Jun/2026 00:09:29] "GET /status HTTP/1.1" 200 -

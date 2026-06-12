@@ -160,6 +160,15 @@
             gap: 18px;
         }
 
+        .page-view {
+            display: none;
+            gap: 18px;
+        }
+
+        .page-view.active {
+            display: grid;
+        }
+
         .topbar,
         .priority-strip,
         .workspace,
@@ -313,6 +322,14 @@
             background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(245, 237, 225, 0.95));
             display: grid;
             gap: 10px;
+            cursor: pointer;
+            transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+        }
+
+        .priority-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(53, 43, 25, 0.08);
+            border-color: rgba(35, 79, 63, 0.35);
         }
 
         .priority-card .eyebrow {
@@ -364,6 +381,11 @@
             min-height: 620px;
         }
 
+        .detail-main {
+            min-width: 0;
+            display: grid;
+        }
+
         .map-panel,
         .context-panel,
         .section-card {
@@ -371,6 +393,19 @@
             border: 1px solid rgba(215, 196, 170, 0.95);
             border-radius: var(--radius-lg);
             overflow: hidden;
+        }
+
+        .page-panel {
+            display: none !important;
+            min-width: 0;
+        }
+
+        .page-panel.active {
+            display: grid !important;
+        }
+
+        .page-panel.section-card.active {
+            min-height: 620px;
         }
 
         .map-panel {
@@ -417,6 +452,17 @@
             color: var(--text);
             font-size: 13px;
             font-weight: 600;
+        }
+
+        button.pill {
+            cursor: pointer;
+            transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        button.pill:hover {
+            transform: translateY(-1px);
+            border-color: rgba(35, 79, 63, 0.35);
+            box-shadow: 0 10px 24px rgba(53, 43, 25, 0.08);
         }
 
         .pill strong {
@@ -547,10 +593,8 @@
         .list-item {
             border: 1px solid var(--line);
             border-radius: var(--radius-md);
-            padding: 14px;
+            padding: 10px 12px;
             background: rgba(255, 255, 255, 0.92);
-            display: grid;
-            gap: 8px;
             cursor: pointer;
             transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
         }
@@ -569,9 +613,9 @@
 
         .item-layout {
             display: grid;
-            grid-template-columns: 96px minmax(0, 1fr);
+            grid-template-columns: 72px minmax(0, 1fr) auto;
             gap: 12px;
-            align-items: start;
+            align-items: center;
         }
 
         .preview-frame {
@@ -589,40 +633,92 @@
             object-fit: cover;
         }
 
+        .preview-split {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            height: 100%;
+        }
+
+        .preview-split-pane {
+            position: relative;
+            min-width: 0;
+            height: 100%;
+            overflow: hidden;
+            background: linear-gradient(180deg, #f7f2ea, #f0e7db);
+        }
+
+        .preview-split-pane + .preview-split-pane {
+            border-left: 1px solid rgba(215, 196, 170, 0.95);
+        }
+
+        .preview-split-pane img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-split-label {
+            position: absolute;
+            left: 8px;
+            bottom: 8px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: rgba(255, 253, 249, 0.9);
+            color: var(--text);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .preview-trigger {
+            display: block;
+            width: 72px;
+            padding: 0;
+            border: none;
+            background: transparent;
+            cursor: zoom-in;
+            text-align: left;
+        }
+
         .preview-frame.large {
             aspect-ratio: 1.5 / 1;
         }
 
         .item-main {
             min-width: 0;
-            display: grid;
-            gap: 8px;
-        }
-
-        .item-topline {
             display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
+            align-items: center;
             gap: 12px;
+            overflow: hidden;
         }
 
         .item-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .item-sub {
+        .item-summary {
             margin: 0;
             color: var(--muted);
             font-size: 13px;
-            line-height: 1.5;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .item-meta {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
+        }
+
+        .item-meta.compact {
+            flex-wrap: nowrap;
+            justify-content: flex-end;
+            overflow: hidden;
         }
 
         .badge {
@@ -846,6 +942,42 @@
             gap: 18px;
         }
 
+        .detail-tabs {
+            display: grid;
+            gap: 14px;
+        }
+
+        .detail-tablist {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .detail-tab {
+            border: 1px solid var(--line);
+            background: #fff;
+            color: var(--muted);
+            border-radius: 999px;
+            padding: 10px 14px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .detail-tab.active {
+            background: var(--primary-soft);
+            color: var(--primary);
+            border-color: rgba(35, 79, 63, 0.26);
+        }
+
+        .detail-tabpanel {
+            display: none;
+            gap: 14px;
+        }
+
+        .detail-tabpanel.active {
+            display: grid;
+        }
+
         .popup-grid {
             display: grid;
             grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.1fr);
@@ -859,6 +991,75 @@
             justify-content: flex-end;
             gap: 10px;
             flex-wrap: wrap;
+        }
+
+        .preview-lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(21, 16, 8, 0.68);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 4300;
+        }
+
+        .preview-lightbox.open {
+            display: flex;
+        }
+
+        .preview-lightbox-card {
+            width: min(1100px, 100%);
+            max-height: 92vh;
+            overflow: auto;
+            background: #fffdf9;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-xl);
+            box-shadow: 0 30px 60px rgba(42, 29, 12, 0.24);
+        }
+
+        .preview-lightbox-head,
+        .preview-lightbox-body {
+            padding: 20px 22px;
+        }
+
+        .preview-lightbox-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: start;
+            border-bottom: 1px solid rgba(215, 196, 170, 0.9);
+        }
+
+        .preview-lightbox-head h3 {
+            margin: 0 0 6px;
+            font-size: 1.4rem;
+        }
+
+        .preview-lightbox-head p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .preview-lightbox-body {
+            display: grid;
+            gap: 16px;
+        }
+
+        .preview-lightbox-frame {
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(215, 196, 170, 0.95);
+            background: linear-gradient(180deg, #f7f2ea, #f0e7db);
+            aspect-ratio: 16 / 10;
+        }
+
+        .preview-lightbox-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         @media (max-width: 1260px) {
@@ -901,7 +1102,23 @@
             }
 
             .item-layout {
-                grid-template-columns: 1fr;
+                grid-template-columns: 64px minmax(0, 1fr);
+                align-items: start;
+            }
+
+            .preview-trigger {
+                width: 64px;
+            }
+
+            .item-main {
+                display: grid;
+                gap: 4px;
+            }
+
+            .item-meta.compact {
+                grid-column: 2;
+                justify-content: flex-start;
+                flex-wrap: wrap;
             }
 
             .topbar,
@@ -965,23 +1182,23 @@
                     <span>Desktopnavigatie voor routes, meldingen, planning en uitzonderingen.</span>
                 </div>
                 <nav class="nav-menu" id="desktop-menu">
-                    <button class="nav-link active" data-scroll-target="section-overview" type="button">
+                    <button class="nav-link active" data-page="overview" type="button">
                         <i class="fas fa-grip"></i>
                         <div>Overzicht<br><span>KPI's en live status</span></div>
                     </button>
-                    <button class="nav-link" data-scroll-target="section-map" type="button">
+                    <button class="nav-link" data-page="map" type="button">
                         <i class="fas fa-map"></i>
                         <div>Kaart<br><span>Routes en punten</span></div>
                     </button>
-                    <button class="nav-link" data-scroll-target="section-routes" type="button">
+                    <button class="nav-link" data-page="routes" type="button">
                         <i class="fas fa-route"></i>
                         <div>Routes<br><span>Routeoverzicht</span></div>
                     </button>
-                    <button class="nav-link" data-scroll-target="section-planning" type="button">
+                    <button class="nav-link" data-page="planning" type="button">
                         <i class="fas fa-list-check"></i>
                         <div>Planning<br><span>Taken en AI</span></div>
                     </button>
-                    <button class="nav-link" data-scroll-target="section-exceptions" type="button">
+                    <button class="nav-link" data-page="exceptions" type="button">
                         <i class="fas fa-triangle-exclamation"></i>
                         <div>Meldingen<br><span>Uitzonderingen</span></div>
                     </button>
@@ -991,15 +1208,15 @@
             <div class="dashboard">
             <section class="mobile-nav">
                 <div class="mobile-nav-menu" id="mobile-menu">
-                    <button class="mobile-nav-link active" data-scroll-target="section-overview" type="button">Overzicht</button>
-                    <button class="mobile-nav-link" data-scroll-target="section-map" type="button">Kaart</button>
-                    <button class="mobile-nav-link" data-scroll-target="section-routes" type="button">Routes</button>
-                    <button class="mobile-nav-link" data-scroll-target="section-planning" type="button">Planning</button>
-                    <button class="mobile-nav-link" data-scroll-target="section-exceptions" type="button">Meldingen</button>
+                    <button class="mobile-nav-link active" data-page="overview" type="button">Overzicht</button>
+                    <button class="mobile-nav-link" data-page="map" type="button">Kaart</button>
+                    <button class="mobile-nav-link" data-page="routes" type="button">Routes</button>
+                    <button class="mobile-nav-link" data-page="planning" type="button">Planning</button>
+                    <button class="mobile-nav-link" data-page="exceptions" type="button">Meldingen</button>
                 </div>
             </section>
 
-            <div id="section-overview"></div>
+            <section class="page-view active" data-page-view="overview">
             <section class="topbar">
                 <div>
                     <div class="brand-kicker">
@@ -1058,31 +1275,33 @@
             </section>
 
             <section class="priority-strip">
-                <article class="priority-card alert">
+                <article class="priority-card alert" data-priority-nav="planning" tabindex="0" role="button" aria-label="Ga naar planning met open taken">
                     <span class="eyebrow">Nu actie</span>
                     <span class="value" id="prio-open-tasks">0</span>
                     <div class="meta" id="prio-open-tasks-meta">Open taken wachten op opvolging.</div>
                 </article>
-                <article class="priority-card warning">
+                <article class="priority-card warning" data-priority-nav="exceptions" tabindex="0" role="button" aria-label="Ga naar meldingen en uitzonderingen">
                     <span class="eyebrow">Controle</span>
                     <span class="value" id="prio-urgent-pois">0</span>
                     <div class="meta" id="prio-urgent-pois-meta">Nieuwe meldingen vragen beoordeling.</div>
                 </article>
-                <article class="priority-card info">
+                <article class="priority-card info" data-priority-nav="routes" tabindex="0" role="button" aria-label="Ga naar routeoverzicht">
                     <span class="eyebrow">Operatie</span>
                     <span class="value" id="prio-routes">0</span>
                     <div class="meta" id="prio-routes-meta">Beschikbare routes in je dataset.</div>
                 </article>
-                <article class="priority-card success">
+                <article class="priority-card success" data-priority-nav="planning-ai" tabindex="0" role="button" aria-label="Ga naar AI planning">
                     <span class="eyebrow">AI / planning</span>
                     <span class="value" id="prio-ai">0</span>
                     <div class="meta" id="prio-ai-meta">Aanbevelingen op basis van je meldingen.</div>
                 </article>
             </section>
+            </section>
 
-            <div id="section-map"></div>
+            <section class="page-view" data-page-view="detail">
             <section class="workspace">
-                <article class="map-panel">
+                <div class="detail-main">
+                <article class="map-panel page-panel active" data-panel="map">
                     <div class="panel-head">
                         <div>
                             <h2>Live kaart</h2>
@@ -1090,25 +1309,56 @@
                         </div>
                     </div>
                     <div class="map-toolbar">
-                        <div class="pill">
+                        <button class="pill" type="button" data-counter-nav="routes">
                             <i class="fas fa-route"></i>
                             <span>Routes <strong id="map-routes">0</strong></span>
-                        </div>
-                        <div class="pill">
+                        </button>
+                        <button class="pill" type="button" data-counter-nav="exceptions">
                             <i class="fas fa-location-dot"></i>
                             <span>Meldingen <strong id="map-pois">0</strong></span>
-                        </div>
-                        <div class="pill">
+                        </button>
+                        <button class="pill" type="button" data-counter-nav="planning">
                             <i class="fas fa-list-check"></i>
                             <span>Taken <strong id="map-tasks">0</strong></span>
-                        </div>
-                        <div class="pill">
+                        </button>
+                        <button class="pill" type="button" data-counter-nav="exceptions">
                             <i class="fas fa-triangle-exclamation"></i>
                             <span>Uitzonderingen <strong id="map-exceptions">0</strong></span>
-                        </div>
+                        </button>
                     </div>
                     <div id="map"></div>
                 </article>
+
+                <article class="section-card page-panel" data-panel="routes" id="section-routes">
+                    <div class="panel-head">
+                        <div>
+                            <h3>Operatie vandaag</h3>
+                            <p class="panel-copy">Routes en recente meldingen die operationeel relevant zijn.</p>
+                        </div>
+                    </div>
+                    <div class="section-body" id="operations-section"></div>
+                </article>
+
+                <article class="section-card page-panel" data-panel="planning" id="section-planning">
+                    <div class="panel-head">
+                        <div>
+                            <h3>Planning en taken</h3>
+                            <p class="panel-copy">Open werk, AI-voorstellen en directe opvolging vanuit je eigen data.</p>
+                        </div>
+                    </div>
+                    <div class="section-body" id="planning-section"></div>
+                </article>
+
+                <article class="section-card page-panel" data-panel="exceptions" id="section-exceptions">
+                    <div class="panel-head">
+                        <div>
+                            <h3>Uitzonderingen</h3>
+                            <p class="panel-copy">Items die nu aandacht vragen door leeftijd, urgentie of ontbrekende opvolging.</p>
+                        </div>
+                    </div>
+                    <div class="section-body" id="exceptions-section"></div>
+                </article>
+                </div>
 
                 <aside class="context-panel">
                     <div class="panel-head">
@@ -1131,37 +1381,6 @@
                     </div>
                 </aside>
             </section>
-
-            <section class="section-grid">
-                <article class="section-card" id="section-routes">
-                    <div class="panel-head">
-                        <div>
-                            <h3>Operatie vandaag</h3>
-                            <p class="panel-copy">Routes en recente meldingen die operationeel relevant zijn.</p>
-                        </div>
-                    </div>
-                    <div class="section-body" id="operations-section"></div>
-                </article>
-
-                <article class="section-card" id="section-planning">
-                    <div class="panel-head">
-                        <div>
-                            <h3>Planning en taken</h3>
-                            <p class="panel-copy">Open werk, AI-voorstellen en directe opvolging vanuit je eigen data.</p>
-                        </div>
-                    </div>
-                    <div class="section-body" id="planning-section"></div>
-                </article>
-
-                <article class="section-card" id="section-exceptions">
-                    <div class="panel-head">
-                        <div>
-                            <h3>Uitzonderingen</h3>
-                            <p class="panel-copy">Items die nu aandacht vragen door leeftijd, urgentie of ontbrekende opvolging.</p>
-                        </div>
-                    </div>
-                    <div class="section-body" id="exceptions-section"></div>
-                </article>
             </section>
             </div>
         </div>
@@ -1232,6 +1451,26 @@
         </div>
     </div>
 
+    <div class="preview-lightbox" id="preview-lightbox">
+        <div class="preview-lightbox-card">
+            <div class="preview-lightbox-head">
+                <div>
+                    <h3 id="preview-lightbox-title">Preview</h3>
+                    <p id="preview-lightbox-summary">Vergrote weergave van het geselecteerde item.</p>
+                </div>
+                <button class="icon-btn" id="preview-lightbox-close" type="button" aria-label="Sluiten">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            </div>
+            <div class="preview-lightbox-body">
+                <div class="preview-lightbox-frame">
+                    <img id="preview-lightbox-image" alt="Vergrote preview" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="./dashboard-config.local.js"></script>
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDXUEaD1vkgpaIN2NYtXxkQrA_VcgcTnbU",
@@ -1240,6 +1479,11 @@
             storageBucket: "veegtrackerpro-c03ae.firebasestorage.app",
             messagingSenderId: "534557233635",
             appId: "1:534557233635:android:ca91a08ee12415526c50d6"
+        };
+        const dashboardConfig = window.VEEGTRACKER_CONFIG || {
+            googleMapsKey: "",
+            googleStreetViewKey: "",
+            streetViewMetadataLookahead: 12
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -1267,20 +1511,27 @@
             className: "map-icon"
         });
 
-        const GPX_FILES = [
+        const ROUTE_GPX_FILES = [
             "2 Parels + fietspaden.gpx",
             "DOORN.gpx",
             "Fietspad en rijbaan.gpx",
             "Korte dreef.gpx",
-            "markers 2026.gpx",
             "Oranjevijver.gpx",
             "Rosarium.gpx",
             "Stationsplein.gpx",
             "Traaij (deel1).gpx",
             "Traaij (deel2).gpx"
         ];
+        const MARKER_GPX_FILES = ["markers 2026.gpx"];
 
-        const GOOGLE_MAPS_STATIC_KEY = "AIzaSyDXUEaD1vkgpaIN2NYtXxkQrA_VcgcTnbU";
+        const GOOGLE_MAPS_KEY = dashboardConfig.googleMapsKey || firebaseConfig.apiKey;
+        const GOOGLE_STREET_VIEW_KEY = dashboardConfig.googleStreetViewKey || GOOGLE_MAPS_KEY;
+        let routePreviewDiagnostics = {
+            mapsKeyLoaded: Boolean(GOOGLE_MAPS_KEY),
+            streetViewKeyLoaded: Boolean(GOOGLE_STREET_VIEW_KEY),
+            streetViewStatus: GOOGLE_STREET_VIEW_KEY ? "pending" : "missing-key",
+            lastStreetViewError: ""
+        };
 
         const MARKER_PHOTO_FILES = [
             "10.Foto-s.061716.jpg",
@@ -1342,19 +1593,25 @@
             tasks: [],
             ai: []
         };
+        const WEED_LAST_DONE_AT = new Date(2026, 4, 15).getTime();
+        const WEED_ROTATION_DAYS = 42;
+        const DAY_IN_MS = 86400000;
         let selectedItem = null;
         let markers = [];
         let routeLayers = [];
         let lastUpdateAt = null;
         let activeFilters = { area: "all", status: "all" };
         let toastTimer = null;
-        let activeScrollTarget = "section-overview";
+        let activePage = "overview";
+        const routePreviewCache = new Map();
+        const routePreviewPending = new Set();
 
         const areaFilterEl = document.getElementById("area-filter");
         const statusFilterEl = document.getElementById("status-filter");
         const taskDialogEl = document.getElementById("task-dialog");
         const taskFormEl = document.getElementById("task-form");
         const mapPopupEl = document.getElementById("map-popup");
+        const previewLightboxEl = document.getElementById("preview-lightbox");
 
         areaFilterEl.addEventListener("change", () => {
             activeFilters.area = areaFilterEl.value;
@@ -1371,8 +1628,14 @@
         document.getElementById("btn-save-task").addEventListener("click", saveTaskFromDialog);
         document.getElementById("btn-focus-latest").addEventListener("click", focusLatestPoi);
         document.getElementById("map-popup-close").addEventListener("click", closeMapPopup);
+        document.getElementById("preview-lightbox-close").addEventListener("click", closePreviewLightbox);
+        wirePriorityNavigation();
+        wireCounterNavigation();
         taskDialogEl.addEventListener("click", (event) => {
             if (event.target === taskDialogEl) closeTaskDialog();
+        });
+        previewLightboxEl.addEventListener("click", (event) => {
+            if (event.target === previewLightboxEl) closePreviewLightbox();
         });
         mapPopupEl.addEventListener("click", (event) => {
             if (event.target === mapPopupEl) closeMapPopup();
@@ -1422,6 +1685,51 @@
             document.getElementById("sync-status").textContent = `Fout bij ${collectionName}`;
             showToast(`Kon ${collectionName} niet laden`);
             console.error(error);
+        }
+
+        function wirePriorityNavigation() {
+            document.querySelectorAll("[data-priority-nav]").forEach((card) => {
+                const navigate = () => navigateFromPriority(card.getAttribute("data-priority-nav"));
+                card.addEventListener("click", navigate);
+                card.addEventListener("keydown", (event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        navigate();
+                    }
+                });
+            });
+        }
+
+        function wireCounterNavigation() {
+            document.querySelectorAll("[data-counter-nav]").forEach((button) => {
+                const navigate = () => navigateFromPriority(button.getAttribute("data-counter-nav"));
+                button.addEventListener("click", navigate);
+                button.addEventListener("keydown", (event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        navigate();
+                    }
+                });
+            });
+        }
+
+        function navigateFromPriority(target) {
+            const filtered = getFilteredData();
+            activePage = target && target.startsWith("planning") ? "planning" : target;
+            if (target === "planning") {
+                selectedItem = filtered.tasks.length > 0
+                    ? { kind: "task", item: filtered.tasks[0] }
+                    : filtered.ai.length > 0 ? { kind: "ai", item: filtered.ai[0] } : null;
+            } else if (target === "planning-ai") {
+                selectedItem = filtered.ai.length > 0
+                    ? { kind: "ai", item: filtered.ai[0] }
+                    : filtered.tasks.length > 0 ? { kind: "task", item: filtered.tasks[0] } : null;
+            } else if (target === "exceptions") {
+                selectedItem = filtered.pois.length > 0 ? { kind: "poi", item: filtered.pois[0] } : null;
+            } else if (target === "routes") {
+                selectedItem = filtered.routes.length > 0 ? { kind: "route", item: filtered.routes[0] } : null;
+            }
+            renderDashboard();
         }
 
         function setLastUpdate() {
@@ -1498,6 +1806,7 @@
 
         function renderDashboard() {
             const filtered = getFilteredData();
+            requestRoutePreviewHydration(filtered.routes);
             renderPriorityStrip(filtered);
             renderMap(filtered);
             renderOperationsSection(filtered);
@@ -1506,6 +1815,7 @@
             renderContextPanel(filtered);
             renderAreaFilterOptions();
             updateMapCounters(filtered);
+            updatePageViews();
         }
 
         function getFilteredData() {
@@ -1593,7 +1903,7 @@
                     opacity: 0.82
                 }).addTo(map);
                 line.on("click", () => {
-                    selectItem("route", route);
+                    selectItem("route", route, "map");
                     openMapPopup("route", route);
                 });
                 routeLayers.push(line);
@@ -1608,7 +1918,7 @@
                     `<strong>${escapeHtml(poi.type || "Melding")}</strong><br>${escapeHtml(poi.description || "Geen toelichting")}`
                 );
                 marker.on("click", () => {
-                    selectItem("poi", poi);
+                    selectItem("poi", poi, "map");
                     openMapPopup("poi", poi);
                 });
                 markers.push(marker);
@@ -1657,7 +1967,6 @@
             const routeItems = filtered.routes
                 .slice()
                 .sort((a, b) => safeNumber(b.createdAt) - safeNumber(a.createdAt))
-                .slice(0, 4)
                 .map((route) =>
                     createListItem({
                         kind: "route",
@@ -1683,7 +1992,25 @@
                         subtitle: poi.description || `Locatie ${formatCoordinates(poi)}`,
                         badges: [
                             { label: getPoiSeverityLabel(poi), tone: getPoiSeverityTone(poi) },
-                            { label: formatDate(poi.timestamp), tone: "accent" }
+                            { label: getPoiScheduleBadge(poi), tone: isWeedPoi(poi) ? "info" : "accent" }
+                        ]
+                    })
+                );
+
+            const completedPoiItems = filtered.pois
+                .filter(isPoiCompleted)
+                .slice()
+                .sort((a, b) => safeNumber(b.updatedAt || b.timestamp) - safeNumber(a.updatedAt || a.timestamp))
+                .slice(0, 3)
+                .map((poi) =>
+                    createListItem({
+                        kind: "poi",
+                        item: poi,
+                        title: poi.type || "Afgerond punt",
+                        subtitle: poi.actionTaken || poi.description || `Bijgewerkt op ${formatDate(poi.updatedAt || poi.timestamp)}`,
+                        badges: [
+                            { label: poi.status || "afgerond", tone: "success" },
+                            { label: getPoiScheduleBadge(poi), tone: isWeedPoi(poi) ? "info" : "accent" }
                         ]
                     })
                 );
@@ -1691,6 +2018,7 @@
             container.innerHTML = `
                 ${renderListBlock("Actieve routes", routeItems, "Geen routes gevonden in de huidige filter.")}
                 ${renderListBlock("Recente meldingen", poiItems, "Geen meldingen om te tonen.")}
+                ${renderListBlock("Laatst afgehandelde punten", completedPoiItems, "Nog geen afgehandelde punten in de huidige selectie.")}
             `;
             wireListInteractions(container);
         }
@@ -1775,7 +2103,7 @@
                     item: poi,
                     title: poi.type || "Nieuwe melding",
                     subtitle: poi.description || `Nieuwe melding op ${formatCoordinates(poi)}`,
-                    badges: [{ label: "nieuw", tone: "accent" }]
+                    badges: [{ label: getPoiScheduleBadge(poi), tone: isWeedPoi(poi) ? "info" : "accent" }]
                 }));
 
             return [...urgentPois, ...staleTasks].sort((a, b) => {
@@ -1787,7 +2115,7 @@
 
         function renderContextPanel(filtered) {
             const contextDetails = document.getElementById("context-details");
-            if (!selectedItem || !isSelectionStillVisible(selectedItem, filtered)) {
+            if (!selectedItem || !isSelectionStillVisible(selectedItem, filtered) || !selectionMatchesActivePage(selectedItem, filtered)) {
                 selectedItem = pickDefaultSelection(filtered);
             }
 
@@ -1817,9 +2145,11 @@
                     title: item.name || "Naamloze route",
                     summary: "Route-informatie uit je dataset, geschikt voor planning en controle op tablet of pc.",
                     body: `
-                        <div class="preview-frame large">
-                            ${renderPreviewImage("route", item, item.name || "route")}
-                        </div>
+                        <button class="preview-trigger" data-action="open-preview" data-kind="route" data-id="${item.id}" type="button">
+                            <div class="preview-frame large">
+                                ${renderPreviewImage("route", item, item.name || "route")}
+                            </div>
+                        </button>
                         <div class="detail-card">
                             <h4>Routegegevens</h4>
                             <div class="detail-list">
@@ -1836,31 +2166,84 @@
                             <h4>Wat kun je hiermee</h4>
                             <p class="panel-copy">Gebruik routes als operationeel referentiepunt. Deze route komt direct uit je GPX- of Firestore-data en wordt als lijn op de kaart getoond.</p>
                         </div>
+                        ${canManageCloudRoute(item) ? `
+                        <div class="detail-card">
+                            <h4>Acties</h4>
+                            <div class="context-actions">
+                                <button class="primary-btn" data-action="add-poi-route" data-id="${item.id}" type="button">
+                                    <i class="fas fa-location-dot"></i>
+                                    <span>Voeg punt toe op kaartcentrum</span>
+                                </button>
+                            </div>
+                        </div>
+                        ` : ""}
                     `
                 };
             }
 
             if (kind === "poi") {
+                const photoUrls = getPoiPhotoUrls(item);
+                const lastDonePhotoUrl = resolvePoiLastDonePhotoUrl(item);
+                const streetViewUrl = createPoiStreetViewUrl(item);
                 return {
                     title: item.type || "Melding",
                     summary: item.description || "Melding uit het veld met locatie en tijdstip.",
                     body: `
-                        <div class="preview-frame large">
-                            ${renderPreviewImage("poi", item, item.type || "melding")}
-                        </div>
+                        <button class="preview-trigger" data-action="open-preview" data-kind="poi" data-id="${item.id}" type="button">
+                            <div class="preview-frame large">
+                                ${renderPreviewImage("poi", item, item.type || "melding")}
+                            </div>
+                        </button>
                         <div class="detail-card">
                             <h4>Melding</h4>
                             <div class="detail-list">
                                 ${detailRow("Type", item.type || "Onbekend")}
                                 ${detailRow("Tijdstip", formatDate(item.timestamp, true))}
+                                ${detailRow("Bijgewerkt", formatDate(item.updatedAt || item.timestamp, true))}
+                                ${item.completedAt ? detailRow("Laatst voltooid", formatDate(item.completedAt, true)) : ""}
+                                ${isWeedPoi(item) ? detailRow("Laatst gedaan", formatDate(WEED_LAST_DONE_AT, true)) : ""}
+                                ${isWeedPoi(item) ? detailRow("Rotatie", "6 weken") : ""}
+                                ${isWeedPoi(item) ? detailRow("Nog te gaan", getPoiTimeRemainingLabel(item)) : ""}
                                 ${detailRow("Coördinaten", formatCoordinates(item))}
+                                ${detailRow("Status", item.status || "open")}
                                 ${detailRow("Urgentie", getPoiSeverityLabel(item))}
+                                ${item.actionTaken ? detailRow("Actie", item.actionTaken) : ""}
+                                ${item.followUpAction ? detailRow("Vervolg", item.followUpAction) : ""}
                             </div>
                         </div>
                         <div class="detail-card">
                             <h4>Omschrijving</h4>
                             <p class="panel-copy">${escapeHtml(item.description || "Geen extra omschrijving vastgelegd.")}</p>
                         </div>
+                        ${lastDonePhotoUrl ? `
+                        <div class="detail-card">
+                            <h4>Laatste foto van vorige beurt</h4>
+                            <img src="${escapeAttribute(lastDonePhotoUrl)}" alt="Laatste beurtfoto" style="width:100%;height:180px;object-fit:cover;border-radius:14px;border:1px solid rgba(215,196,170,0.95);" />
+                        </div>
+                        ` : ""}
+                        ${photoUrls.length > 0 ? `
+                        <div class="detail-card">
+                            <h4>Toegevoegde foto's</h4>
+                            <div class="item-meta">
+                                ${photoUrls.map((url, index) => `<span class="badge info">Foto ${index + 1}</span>`).join("")}
+                            </div>
+                            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;">
+                                ${photoUrls.map((url, index) => `<img src="${escapeAttribute(url)}" alt="Puntfoto ${index + 1}" style="width:100%;height:120px;object-fit:cover;border-radius:14px;border:1px solid rgba(215,196,170,0.95);" />`).join("")}
+                            </div>
+                        </div>
+                        ` : ""}
+                        ${streetViewUrl ? `
+                        <div class="detail-card">
+                            <h4>Street View op locatie</h4>
+                            <img src="${escapeAttribute(streetViewUrl)}" alt="Street View op locatie" onerror="this.onerror=null;this.src='${escapeAttribute(createPoiFallbackDataUri(item))}'" style="width:100%;height:180px;object-fit:cover;border-radius:14px;border:1px solid rgba(215,196,170,0.95);" />
+                        </div>
+                        ` : ""}
+                        ${item.workLog ? `
+                        <div class="detail-card">
+                            <h4>Werklog</h4>
+                            <p class="panel-copy" style="white-space:pre-line;">${escapeHtml(item.workLog)}</p>
+                        </div>
+                        ` : ""}
                         <div class="detail-card">
                             <h4>Acties</h4>
                             <div class="context-actions">
@@ -1872,6 +2255,12 @@
                                     <i class="fas fa-plus"></i>
                                     <span>Maak taak van melding</span>
                                 </button>
+                                ${canManageCloudPoi(item) ? `
+                                <button class="danger-btn" data-action="delete-poi" data-id="${item.id}" type="button">
+                                    <i class="fas fa-trash"></i>
+                                    <span>Verwijder punt</span>
+                                </button>
+                                ` : ""}
                             </div>
                         </div>
                     `
@@ -1983,24 +2372,44 @@
 
         function createListItem({ kind, item, title, subtitle, badges }) {
             const active = selectedItem && selectedItem.kind === kind && selectedItem.item.id === item.id;
+            const compactSummary = buildCompactSummary(kind, item, subtitle);
+            const compactBadges = (badges || []).slice(0, 2);
             return `
                 <div class="list-item${active ? " active" : ""}" data-kind="${kind}" data-id="${item.id}">
                     <div class="item-layout">
-                        <div class="preview-frame">
-                            ${renderPreviewImage(kind, item, title)}
-                        </div>
+                        <button class="preview-trigger" data-action="open-preview" data-kind="${kind}" data-id="${item.id}" type="button">
+                            <div class="preview-frame">
+                                ${renderPreviewImage(kind, item, title)}
+                            </div>
+                        </button>
                         <div class="item-main">
-                            <div class="item-topline">
-                                <p class="item-title">${escapeHtml(title)}</p>
-                            </div>
-                            <p class="item-sub">${escapeHtml(subtitle)}</p>
-                            <div class="item-meta">
-                                ${badges.map((badge) => `<span class="badge ${badge.tone || ""}">${escapeHtml(badge.label)}</span>`).join("")}
-                            </div>
+                            <p class="item-title">${escapeHtml(title)}</p>
+                            <p class="item-summary">${escapeHtml(compactSummary)}</p>
+                        </div>
+                        <div class="item-meta compact">
+                            ${compactBadges.map((badge) => `<span class="badge ${badge.tone || ""}">${escapeHtml(badge.label)}</span>`).join("")}
                         </div>
                     </div>
                 </div>
             `;
+        }
+
+        function buildCompactSummary(kind, item, fallback) {
+            if (kind === "route") {
+                const pointCount = Array.isArray(item.trackPoints) ? item.trackPoints.length : (Array.isArray(item.waypoints) ? item.waypoints.length : 0);
+                return `${safeNumber(item.distanceKm).toFixed(1)} km • ${pointCount} punten`;
+            }
+            if (kind === "poi") {
+                if (isWeedPoi(item)) return `${formatDate(WEED_LAST_DONE_AT)} • ${getPoiTimeRemainingLabel(item)}`;
+                return `${item.status || getPoiSeverityLabel(item)} • ${formatDate(item.updatedAt || item.timestamp)}`;
+            }
+            if (kind === "task") {
+                return `${item.status || "open"} • ${item.source || "dashboard"}`;
+            }
+            if (kind === "ai") {
+                return `${item.severity || "laag"} • ${item.type || "signaal"}`;
+            }
+            return fallback || "";
         }
 
         function renderListBlock(title, items, emptyText) {
@@ -2034,6 +2443,19 @@
                     const item = findItemByKindAndId(kind, id);
                     if (item) {
                         selectItem(kind, item);
+                        openMapPopup(kind, item);
+                    }
+                });
+            });
+
+            container.querySelectorAll(".preview-trigger[data-action='open-preview']").forEach((button) => {
+                button.addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    const kind = button.getAttribute("data-kind");
+                    const id = button.getAttribute("data-id");
+                    const item = findItemByKindAndId(kind, id);
+                    if (item) {
+                        openPreviewLightbox(kind, item);
                     }
                 });
             });
@@ -2044,6 +2466,15 @@
                 button.addEventListener("click", async () => {
                     const action = button.getAttribute("data-action");
                     const id = button.getAttribute("data-id");
+                    const kind = button.getAttribute("data-kind");
+
+                    if (action === "open-preview") {
+                        const item = findItemByKindAndId(kind, id);
+                        if (item) {
+                            openPreviewLightbox(kind, item);
+                        }
+                        return;
+                    }
 
                     if (action === "focus-poi") {
                         const poi = [...dataStore.gpxPois, ...dataStore.cloudPois].find((entry) => entry.id === id);
@@ -2072,6 +2503,35 @@
                         return;
                     }
 
+                    if (action === "add-poi-route") {
+                        const route = [...dataStore.gpxRoutes, ...dataStore.cloudRoutes].find((entry) => String(entry.id) === String(id));
+                        if (!route || !canManageCloudRoute(route)) {
+                            showToast("Alleen gesynchroniseerde app-routes kunnen nieuwe punten ontvangen");
+                            return;
+                        }
+                        const center = map.getCenter();
+                        const poiId = Date.now();
+                        await db.collection("pois").doc(String(poiId)).set({
+                            routeId: Number(route.id),
+                            type: "Dashboard punt",
+                            latitude: Number(center.lat),
+                            longitude: Number(center.lng),
+                            description: `Toegevoegd via dashboard voor route ${route.name || route.id}`,
+                            status: "open",
+                            actionTaken: "",
+                            followUpAction: "",
+                            imageUri: "",
+                            photoUris: "",
+                            workLog: "",
+                            completedAt: null,
+                            updatedAt: poiId,
+                            timestamp: poiId,
+                            source: "DASHBOARD"
+                        });
+                        showToast("Nieuw punt toegevoegd op het huidige kaartcentrum");
+                        return;
+                    }
+
                     if (action === "accept-ai") {
                         const suggestion = dataStore.ai.find((entry) => entry.id === id);
                         if (!suggestion) return;
@@ -2092,6 +2552,19 @@
                         return;
                     }
 
+                    if (action === "delete-poi") {
+                        const poi = [...dataStore.cloudPois, ...dataStore.gpxPois].find((entry) => String(entry.id) === String(id));
+                        if (!poi || !canManageCloudPoi(poi)) {
+                            showToast("Dit punt kan hier niet verwijderd worden");
+                            return;
+                        }
+                        const confirmed = window.confirm(`Punt "${poi.type || "zonder naam"}" verwijderen?`);
+                        if (!confirmed) return;
+                        await db.collection("pois").doc(String(id)).delete();
+                        showToast("Punt verwijderd");
+                        return;
+                    }
+
                     if (action === "delete-task") {
                         const task = dataStore.tasks.find((entry) => entry.id === id);
                         if (!task) return;
@@ -2104,17 +2577,33 @@
             });
         }
 
-        function selectItem(kind, item) {
+        function selectItem(kind, item, targetPage = null) {
             selectedItem = { kind, item };
             if (kind === "poi" && hasValidCoordinates(item)) {
                 map.setView([Number(item.latitude), Number(item.longitude)], 17);
             } else if (kind === "route" && Array.isArray(item.trackPoints) && item.trackPoints.length > 1) {
                 map.fitBounds(L.latLngBounds(item.trackPoints).pad(0.12));
             }
+            if (targetPage) {
+                activePage = targetPage;
+            } else if (kind === "route") {
+                activePage = "routes";
+            } else if (kind === "task" || kind === "ai") {
+                activePage = "planning";
+            } else if (kind === "poi") {
+                activePage = "exceptions";
+            }
             renderDashboard();
         }
 
         function pickDefaultSelection(filtered) {
+            if (activePage === "routes" && filtered.routes.length > 0) return { kind: "route", item: filtered.routes[0] };
+            if (activePage === "planning" && filtered.tasks.length > 0) return { kind: "task", item: filtered.tasks[0] };
+            if (activePage === "planning" && filtered.ai.length > 0) return { kind: "ai", item: filtered.ai[0] };
+            if (activePage === "exceptions") {
+                const exceptions = buildExceptionItems(filtered);
+                if (exceptions.length > 0) return { kind: exceptions[0].kind, item: exceptions[0].item };
+            }
             if (filtered.pois.length > 0) return { kind: "poi", item: filtered.pois[0] };
             if (filtered.tasks.length > 0) return { kind: "task", item: filtered.tasks[0] };
             if (filtered.routes.length > 0) return { kind: "route", item: filtered.routes[0] };
@@ -2125,6 +2614,20 @@
         function isSelectionStillVisible(selection, filtered) {
             const collection = filtered[`${selection.kind}s`] || (selection.kind === "ai" ? filtered.ai : []);
             return collection.some((entry) => entry.id === selection.item.id);
+        }
+
+        function selectionMatchesActivePage(selection, filtered) {
+            if (!selection) return false;
+            if (activePage === "routes") return selection.kind === "route" && filtered.routes.some((route) => route.id === selection.item.id);
+            if (activePage === "planning") {
+                return (selection.kind === "task" && filtered.tasks.some((task) => task.id === selection.item.id))
+                    || (selection.kind === "ai" && filtered.ai.some((item) => item.id === selection.item.id));
+            }
+            if (activePage === "exceptions") {
+                return selection.kind === "poi" && filtered.pois.some((poi) => poi.id === selection.item.id);
+            }
+            if (activePage === "map") return selection.kind === "route" || selection.kind === "poi";
+            return true;
         }
 
         function findItemByKindAndId(kind, id) {
@@ -2175,10 +2678,11 @@
             const html = buildContextHtml(kind, item);
             document.getElementById("map-popup-title").textContent = html.title;
             document.getElementById("map-popup-summary").textContent = html.summary;
-            document.getElementById("map-popup-body").innerHTML = html.body;
+            document.getElementById("map-popup-body").innerHTML = buildPopupBody(kind, item, html);
             document.getElementById("map-popup-actions").innerHTML = buildPopupActions(kind, item);
             mapPopupEl.classList.add("open");
             wireContextActions();
+            wireDetailTabs();
             document.querySelectorAll("[data-popup-close='true']").forEach((button) => {
                 button.addEventListener("click", closeMapPopup);
             });
@@ -2186,6 +2690,161 @@
 
         function closeMapPopup() {
             mapPopupEl.classList.remove("open");
+        }
+
+        function buildPopupBody(kind, item, html) {
+            if (kind === "route") return buildRouteTabbedPopup(item);
+            if (kind === "poi") return buildPoiTabbedPopup(item);
+            return html.body;
+        }
+
+        function buildRouteTabbedPopup(item) {
+            const preview = renderPreviewImage("route", item, item.name || "route");
+            const notes = item.comments || item.routeDescription || "Nog geen log of opmerkingen vastgelegd voor deze route.";
+            return `
+                <div class="detail-tabs">
+                    <div class="detail-tablist">
+                        <button class="detail-tab active" type="button" data-tab-target="route-overview">Overzicht</button>
+                        <button class="detail-tab" type="button" data-tab-target="route-log">Log</button>
+                        <button class="detail-tab" type="button" data-tab-target="route-images">Afbeeldingen</button>
+                    </div>
+                    <div class="detail-tabpanel active" data-tab-panel="route-overview">
+                        <button class="preview-trigger" data-action="open-preview" data-kind="route" data-id="${item.id}" type="button">
+                            <div class="preview-frame large">${preview}</div>
+                        </button>
+                        <div class="detail-card">
+                            <h4>Routegegevens</h4>
+                            <div class="detail-list">
+                                ${detailRow("Naam", item.name || "Onbekend")}
+                                ${detailRow("Afstand", `${safeNumber(item.distanceKm).toFixed(1)} km`)}
+                                ${detailRow("Aangemaakt", formatDate(item.createdAt, true))}
+                                ${detailRow("Trackpunten", String((item.trackPoints || []).length || 0))}
+                                ${detailRow("Waypoints", String((item.waypoints || []).length || 0))}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="detail-tabpanel" data-tab-panel="route-log">
+                        <div class="detail-card">
+                            <h4>Log / opmerkingen</h4>
+                            <p class="panel-copy">${escapeHtml(notes)}</p>
+                        </div>
+                    </div>
+                    <div class="detail-tabpanel" data-tab-panel="route-images">
+                        <div class="detail-card">
+                            <h4>Miniatuur Street View</h4>
+                            <div class="preview-frame large">${preview}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function buildPoiTabbedPopup(item) {
+            const photoUrls = getPoiPhotoUrls(item);
+            const lastDonePhotoUrl = resolvePoiLastDonePhotoUrl(item);
+            const streetViewUrl = createPoiStreetViewUrl(item);
+            return `
+                <div class="detail-tabs">
+                    <div class="detail-tablist">
+                        <button class="detail-tab active" type="button" data-tab-target="poi-overview">Overzicht</button>
+                        <button class="detail-tab" type="button" data-tab-target="poi-log">Log</button>
+                        <button class="detail-tab" type="button" data-tab-target="poi-images">Afbeeldingen</button>
+                    </div>
+                    <div class="detail-tabpanel active" data-tab-panel="poi-overview">
+                        <div class="detail-card">
+                            <h4>Melding</h4>
+                            <div class="detail-list">
+                                ${detailRow("Type", item.type || "Onbekend")}
+                                ${detailRow("Tijdstip", formatDate(item.timestamp, true))}
+                                ${detailRow("Bijgewerkt", formatDate(item.updatedAt || item.timestamp, true))}
+                                ${item.completedAt ? detailRow("Laatst voltooid", formatDate(item.completedAt, true)) : ""}
+                                ${isWeedPoi(item) ? detailRow("Laatst gedaan", formatDate(WEED_LAST_DONE_AT, true)) : ""}
+                                ${isWeedPoi(item) ? detailRow("Rotatie", "6 weken") : ""}
+                                ${isWeedPoi(item) ? detailRow("Nog te gaan", getPoiTimeRemainingLabel(item)) : ""}
+                                ${detailRow("Coördinaten", formatCoordinates(item))}
+                                ${detailRow("Status", item.status || "open")}
+                            </div>
+                        </div>
+                        <div class="detail-card">
+                            <h4>Omschrijving</h4>
+                            <p class="panel-copy">${escapeHtml(item.description || "Geen extra omschrijving vastgelegd.")}</p>
+                        </div>
+                    </div>
+                    <div class="detail-tabpanel" data-tab-panel="poi-log">
+                        <div class="detail-card">
+                            <h4>Log</h4>
+                            <p class="panel-copy" style="white-space:pre-line;">${escapeHtml(item.workLog || "Nog geen logregels vastgelegd.")}</p>
+                        </div>
+                        <div class="detail-card">
+                            <h4>Laatste acties</h4>
+                            <div class="detail-list">
+                                ${item.actionTaken ? detailRow("Actie", item.actionTaken) : detailRow("Actie", "Nog niet ingevuld")}
+                                ${item.followUpAction ? detailRow("Vervolg", item.followUpAction) : detailRow("Vervolg", "Nog niet ingevuld")}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="detail-tabpanel" data-tab-panel="poi-images">
+                        ${lastDonePhotoUrl ? `
+                        <div class="detail-card">
+                            <h4>Laatste foto van vorige beurt</h4>
+                            <img src="${escapeAttribute(lastDonePhotoUrl)}" alt="Laatste beurtfoto" style="width:100%;height:180px;object-fit:cover;border-radius:14px;border:1px solid rgba(215,196,170,0.95);" />
+                        </div>` : ""}
+                        ${streetViewUrl ? `
+                        <div class="detail-card">
+                            <h4>Street View op locatie</h4>
+                            <img src="${escapeAttribute(streetViewUrl)}" alt="Street View op locatie" onerror="this.onerror=null;this.src='${escapeAttribute(createPoiFallbackDataUri(item))}'" style="width:100%;height:180px;object-fit:cover;border-radius:14px;border:1px solid rgba(215,196,170,0.95);" />
+                        </div>` : ""}
+                        ${photoUrls.length > 0 ? `
+                        <div class="detail-card">
+                            <h4>Toegevoegde foto's</h4>
+                            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+                                ${photoUrls.map((url, index) => `<img src="${escapeAttribute(url)}" alt="Puntfoto ${index + 1}" style="width:100%;height:120px;object-fit:cover;border-radius:14px;border:1px solid rgba(215,196,170,0.95);" />`).join("")}
+                            </div>
+                        </div>` : ""}
+                    </div>
+                </div>
+            `;
+        }
+
+        function wireDetailTabs() {
+            const buttons = document.querySelectorAll(".detail-tab[data-tab-target]");
+            buttons.forEach((button) => {
+                button.addEventListener("click", () => {
+                    const target = button.getAttribute("data-tab-target");
+                    document.querySelectorAll(".detail-tab").forEach((entry) => entry.classList.toggle("active", entry === button));
+                    document.querySelectorAll(".detail-tabpanel").forEach((panel) => {
+                        panel.classList.toggle("active", panel.getAttribute("data-tab-panel") === target);
+                    });
+                });
+            });
+        }
+
+        function openPreviewLightbox(kind, item) {
+            const title = kind === "route"
+                ? (item.name || "Routepreview")
+                : kind === "poi"
+                    ? (item.type || "Puntpreview")
+                    : "Preview";
+            const summary = kind === "route"
+                ? "Vergrote routeweergave met miniatuur op kaartbasis."
+                : "Vergrote preview van het geselecteerde punt of de foto.";
+            const image = document.getElementById("preview-lightbox-image");
+            const primarySrc = createPreviewDataUri(kind, item);
+            const fallbackSrc = createPreviewFallbackDataUri(kind, item);
+
+            document.getElementById("preview-lightbox-title").textContent = title;
+            document.getElementById("preview-lightbox-summary").textContent = summary;
+            image.src = primarySrc;
+            image.alt = `Vergrote preview van ${title}`;
+            image.onerror = () => {
+                image.onerror = null;
+                image.src = fallbackSrc;
+            };
+            previewLightboxEl.classList.add("open");
+        }
+
+        function closePreviewLightbox() {
+            previewLightboxEl.classList.remove("open");
         }
 
         function buildPopupActions(kind, item) {
@@ -2223,12 +2882,21 @@
                 return;
             }
 
-            selectItem("poi", latestPoi);
+            selectItem("poi", latestPoi, "map");
         }
 
         function normalizeType(type) {
             const raw = String(type || "").trim().toLowerCase();
-            if (raw.includes("weed") || raw.includes("onkruid")) return "weed";
+            if (
+                raw.includes("weed")
+                || raw.includes("onkruid")
+                || raw.includes("geleider")
+                || raw.includes("middengeleider")
+                || raw.includes("verkeersgeleider")
+                || raw.includes("oversteekplaats")
+                || raw.includes("zebrapad")
+                || raw.includes("verkeerseiland")
+            ) return "weed";
             if (raw.includes("schade")) return "damage";
             if (raw.includes("obstakel")) return "obstacle";
             return raw || "unknown";
@@ -2238,6 +2906,34 @@
             return `${poi.type || ""} ${poi.description || ""}`.trim();
         }
 
+        function getPoiPhotoUrls(poi) {
+            const photoList = String(poi.photoUris || "")
+                .split(/\r?\n/)
+                .map((entry) => entry.trim())
+                .filter((entry) => entry.length > 0 && isDisplayablePhotoUrl(entry));
+            const imageUri = isDisplayablePhotoUrl(poi.imageUri || "") ? [poi.imageUri.trim()] : [];
+            return Array.from(new Set([...imageUri, ...photoList]));
+        }
+
+        function isDisplayablePhotoUrl(value) {
+            return String(value || "").startsWith("http://")
+                || String(value || "").startsWith("https://")
+                || String(value || "").startsWith("data:image/");
+        }
+
+        function isPoiCompleted(poi) {
+            const status = String(poi.status || "").trim().toLowerCase();
+            return status === "afgerond" || status === "closed" || status === "done";
+        }
+
+        function canManageCloudRoute(route) {
+            return Number.isFinite(Number(route.id));
+        }
+
+        function canManageCloudPoi(poi) {
+            return Number.isFinite(Number(poi.id));
+        }
+
         function renderPreviewImage(kind, item, label) {
             const primarySrc = createPreviewDataUri(kind, item);
             const fallbackSrc = createPreviewFallbackDataUri(kind, item);
@@ -2245,7 +2941,7 @@
         }
 
         function createPreviewDataUri(kind, item) {
-            if (kind === "route") return createRouteStaticMapUrl(item);
+            if (kind === "route") return getRoutePreviewImageUrl(item);
             if (kind === "poi") return resolvePoiPreviewUrl(item);
             if (kind === "task") return createLabelPreviewDataUri(item.name || "Taak", item.status || "open", "#4f7ca8");
             return createLabelPreviewDataUri(item.name || "AI", item.severity || "laag", "#d56a34");
@@ -2258,39 +2954,71 @@
             return createLabelPreviewDataUri(item.name || "AI", item.severity || "laag", "#d56a34");
         }
 
-        function createRouteStaticMapUrl(route) {
-            const points = Array.isArray(route.trackPoints) ? route.trackPoints : [];
+
+        function createRouteStreetViewUrl(route) {
+            const points = getRoutePreviewPoints(route);
             const startPoint = points[0];
-            if (!startPoint || !GOOGLE_MAPS_STATIC_KEY) {
+            if (!startPoint || !GOOGLE_STREET_VIEW_KEY) {
                 return createRouteFallbackDataUri(route);
             }
 
-            const sampledPoints = sampleRoutePoints(points, 22);
-            const encodedPath = encodeGooglePolyline(sampledPoints);
+            const nextPoint = points[1] || startPoint;
+            const heading = calculateHeading(startPoint, nextPoint);
             const params = new URLSearchParams({
                 size: "440x320",
                 scale: "2",
-                maptype: "roadmap",
-                key: GOOGLE_MAPS_STATIC_KEY
+                location: `${startPoint[0]},${startPoint[1]}`,
+                heading: heading.toFixed(1),
+                fov: "100",
+                pitch: "0",
+                key: GOOGLE_STREET_VIEW_KEY
             });
-            params.append("markers", `color:0xd56a34|label:S|${startPoint[0]},${startPoint[1]}`);
-            if (points.length > 1) {
-                const endPoint = points[points.length - 1];
-                params.append("markers", `color:0x2d7d4f|label:E|${endPoint[0]},${endPoint[1]}`);
-                params.append("path", `color:0x234f3f|weight:4|enc:${encodedPath}`);
-            } else {
-                params.append("center", `${startPoint[0]},${startPoint[1]}`);
-                params.append("zoom", "16");
+
+            return `https://maps.googleapis.com/maps/api/streetview?${params.toString()}`;
+        }
+
+        function getRoutePreviewImageUrl(route) {
+            return routePreviewCache.get(route.id)?.src || createRouteFallbackDataUri(route);
+        }
+
+        function createRouteOpenStreetMapUrl(route, points) {
+            const sampledPoints = sampleRoutePoints(points, 18);
+            const bounds = getPreviewBounds(sampledPoints);
+            if (!bounds) return createRouteFallbackDataUri(route);
+
+            const centerLat = (bounds.minLat + bounds.maxLat) / 2;
+            const centerLng = (bounds.minLng + bounds.maxLng) / 2;
+            const zoom = estimateStaticMapZoom(bounds, 440, 320);
+            const params = new URLSearchParams({
+                center: `${centerLat},${centerLng}`,
+                zoom: String(zoom),
+                size: "440x320",
+                maptype: "mapnik"
+            });
+
+            params.append("markers", `${sampledPoints[0][0]},${sampledPoints[0][1]},lightblue1`);
+            if (sampledPoints.length > 1) {
+                const endPoint = sampledPoints[sampledPoints.length - 1];
+                params.append("markers", `${endPoint[0]},${endPoint[1]},ol-marker-green`);
+                const pathValue = ["color:0x234f3fdd", "weight:4"]
+                    .concat(sampledPoints.map((point) => `${point[0]},${point[1]}`))
+                    .join("|");
+                params.append("path", pathValue);
             }
 
-            return `https://maps.googleapis.com/maps/api/staticmap?${params.toString()}`;
+            return `https://staticmap.openstreetmap.de/staticmap.php?${params.toString()}`;
         }
 
         function createRouteFallbackDataUri(route) {
-            const points = Array.isArray(route.trackPoints) ? route.trackPoints : [];
+            const points = getRoutePreviewPoints(route);
             const width = 220;
             const height = 160;
             let polyline = "18,120 60,92 120,84 190,38";
+            const statusLabel = !routePreviewDiagnostics.streetViewKeyLoaded
+                ? "Geen Street View-key"
+                : routePreviewDiagnostics.streetViewStatus === "REQUEST_DENIED"
+                    ? "Street View geweigerd"
+                    : "Kaartfallback";
 
             if (points.length > 1) {
                 const lats = points.map((point) => point[0]);
@@ -2304,26 +3032,209 @@
                     const y = 20 + (1 - ((point[0] - minLat) / Math.max(maxLat - minLat, 0.00001))) * (height - 40);
                     return `${x.toFixed(1)},${y.toFixed(1)}`;
                 }).join(" ");
+            } else if (points.length === 1) {
+                polyline = `${(width / 2).toFixed(1)},${(height / 2).toFixed(1)}`;
             }
+
+            const mapPattern = `
+                <defs>
+                    <pattern id="street-grid" width="36" height="36" patternUnits="userSpaceOnUse">
+                        <rect width="36" height="36" fill="#eef3ea"/>
+                        <path d="M0 18h36M18 0v36" stroke="#d7e2d2" stroke-width="1"/>
+                        <path d="M0 8h36M10 0v36" stroke="#e5ede0" stroke-width="6" opacity="0.9"/>
+                        <path d="M0 28h36M28 0v36" stroke="#f6faf3" stroke-width="4" opacity="0.9"/>
+                    </pattern>
+                </defs>
+            `;
 
             const svg = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+                    ${mapPattern}
                     <rect width="${width}" height="${height}" rx="18" fill="#f4efe6"/>
-                    <rect x="8" y="8" width="${width - 16}" height="${height - 16}" rx="14" fill="#fffdf9" stroke="#d7c4aa"/>
-                    <polyline points="${polyline}" fill="none" stroke="#234f3f" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+                    <rect x="8" y="8" width="${width - 16}" height="${height - 16}" rx="14" fill="url(#street-grid)" stroke="#d7c4aa"/>
+                    <path d="M18 138 C44 118, 56 120, 80 98 S130 64, 166 66 S194 84, 202 52" fill="none" stroke="#bdd0b2" stroke-width="10" stroke-linecap="round" opacity="0.85"/>
+                    <path d="M24 30 C54 46, 94 34, 126 44 S170 72, 196 102" fill="none" stroke="#c9d8c1" stroke-width="8" stroke-linecap="round" opacity="0.72"/>
+                    <path d="M28 24 L194 132" stroke="#d7c4aa" stroke-width="2" opacity="0.65"/>
+                    ${points.length > 1 ? `<polyline points="${polyline}" fill="none" stroke="#234f3f" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>` : ""}
                     <circle cx="${polyline.split(" ")[0].split(",")[0]}" cy="${polyline.split(" ")[0].split(",")[1]}" r="7" fill="#d56a34"/>
-                    <circle cx="${polyline.split(" ").slice(-1)[0].split(",")[0]}" cy="${polyline.split(" ").slice(-1)[0].split(",")[1]}" r="7" fill="#2d7d4f"/>
-                    <text x="18" y="28" font-size="12" font-family="Segoe UI, Arial" fill="#667161">Route</text>
-                    <text x="18" y="146" font-size="14" font-family="Segoe UI, Arial" font-weight="700" fill="#1f2c21">${escapeSvgText(route.name || "Route")}</text>
+                    ${points.length > 1 ? `<circle cx="${polyline.split(" ").slice(-1)[0].split(",")[0]}" cy="${polyline.split(" ").slice(-1)[0].split(",")[1]}" r="7" fill="#2d7d4f"/>` : ""}
+                    <rect x="18" y="18" width="60" height="22" rx="11" fill="#fffdf9" opacity="0.92"/>
+                    <text x="28" y="33" font-size="11" font-family="Segoe UI, Arial" font-weight="700" fill="#667161">${statusLabel}</text>
+                    <rect x="18" y="124" width="${width - 36}" height="22" rx="11" fill="#fffdf9" opacity="0.92"/>
+                    <text x="24" y="139" font-size="13" font-family="Segoe UI, Arial" font-weight="700" fill="#1f2c21">${escapeSvgText(route.name || "Route")}</text>
                 </svg>
             `;
             return svgToDataUri(svg);
         }
 
+        function getRoutePreviewPoints(route) {
+            const trackPoints = Array.isArray(route.trackPoints) ? route.trackPoints.filter(isValidPreviewPoint) : [];
+            if (trackPoints.length > 0) return trackPoints;
+
+            const waypointPoints = Array.isArray(route.waypoints)
+                ? route.waypoints
+                    .map((point) => [Number(point.latitude), Number(point.longitude)])
+                    .filter(isValidPreviewPoint)
+                : [];
+            return waypointPoints;
+        }
+
+        function isValidPreviewPoint(point) {
+            return Array.isArray(point)
+                && point.length === 2
+                && Number.isFinite(Number(point[0]))
+                && Number.isFinite(Number(point[1]));
+        }
+
+        function calculateHeading(fromPoint, toPoint) {
+            if (!fromPoint || !toPoint) return 0;
+            const lat1 = Number(fromPoint[0]) * Math.PI / 180;
+            const lat2 = Number(toPoint[0]) * Math.PI / 180;
+            const deltaLng = (Number(toPoint[1]) - Number(fromPoint[1])) * Math.PI / 180;
+            const y = Math.sin(deltaLng) * Math.cos(lat2);
+            const x = Math.cos(lat1) * Math.sin(lat2)
+                - Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLng);
+            const bearing = Math.atan2(y, x) * 180 / Math.PI;
+            return (bearing + 360) % 360;
+        }
+
+        function requestRoutePreviewHydration(routes) {
+            if (!Array.isArray(routes)) return;
+            if (!GOOGLE_STREET_VIEW_KEY) {
+                routePreviewDiagnostics.streetViewStatus = "missing-key";
+                return;
+            }
+            routes.forEach((route) => {
+                if (!route || routePreviewCache.has(route.id) || routePreviewPending.has(route.id)) return;
+                const previewPoints = getRoutePreviewPoints(route)
+                    .slice(0, Math.max(1, Number(dashboardConfig.streetViewMetadataLookahead) || 12));
+                if (previewPoints.length === 0) {
+                    routePreviewCache.set(route.id, { src: createRouteFallbackDataUri(route), source: "fallback-empty" });
+                    return;
+                }
+                routePreviewPending.add(route.id);
+                hydrateRoutePreview(route, previewPoints);
+            });
+        }
+
+        async function hydrateRoutePreview(route, previewPoints) {
+            try {
+                for (let index = 0; index < previewPoints.length; index += 1) {
+                    const point = previewPoints[index];
+                    const nextPoint = previewPoints[index + 1] || previewPoints[index - 1] || point;
+                    const metadata = await fetchStreetViewMetadata(point);
+                    if (metadata.status === "OK") {
+                        routePreviewDiagnostics.streetViewStatus = "OK";
+                        routePreviewDiagnostics.lastStreetViewError = "";
+                        routePreviewCache.set(route.id, {
+                            src: createRouteStreetViewUrlFromPoint(point, nextPoint),
+                            source: "streetview",
+                            index
+                        });
+                        renderDashboard();
+                        return;
+                    }
+                    if (metadata.status === "REQUEST_DENIED") break;
+                }
+                if (routePreviewDiagnostics.streetViewStatus === "pending") {
+                    routePreviewDiagnostics.streetViewStatus = "fallback";
+                }
+                routePreviewCache.set(route.id, { src: createRouteFallbackDataUri(route), source: "fallback-no-streetview" });
+            } catch (_error) {
+                routePreviewDiagnostics.streetViewStatus = "fetch-error";
+                routePreviewCache.set(route.id, { src: createRouteFallbackDataUri(route), source: "fallback-error" });
+            } finally {
+                routePreviewPending.delete(route.id);
+                renderDashboard();
+            }
+        }
+
+        function createRouteStreetViewUrlFromPoint(point, nextPoint) {
+            const heading = calculateHeading(point, nextPoint);
+            const params = new URLSearchParams({
+                size: "440x320",
+                scale: "2",
+                location: `${point[0]},${point[1]}`,
+                heading: heading.toFixed(1),
+                fov: "100",
+                pitch: "0",
+                key: GOOGLE_STREET_VIEW_KEY
+            });
+            return `https://maps.googleapis.com/maps/api/streetview?${params.toString()}`;
+        }
+
+        async function fetchStreetViewMetadata(point) {
+            const params = new URLSearchParams({
+                location: `${point[0]},${point[1]}`,
+                key: GOOGLE_STREET_VIEW_KEY
+            });
+            const response = await fetch(`https://maps.googleapis.com/maps/api/streetview/metadata?${params.toString()}`);
+            const data = await response.json();
+            routePreviewDiagnostics.streetViewStatus = data.status || (response.ok ? "unknown" : "http-error");
+            routePreviewDiagnostics.lastStreetViewError = data.error_message || "";
+            if (data.status === "REQUEST_DENIED") {
+                console.warn("Street View metadata geweigerd:", data.error_message || "onbekende fout");
+            }
+            return data;
+        }
+
+        function getPreviewBounds(points) {
+            if (!Array.isArray(points) || points.length === 0) return null;
+            const lats = points.map((point) => Number(point[0]));
+            const lngs = points.map((point) => Number(point[1]));
+            return {
+                minLat: Math.min(...lats),
+                maxLat: Math.max(...lats),
+                minLng: Math.min(...lngs),
+                maxLng: Math.max(...lngs)
+            };
+        }
+
+        function estimateStaticMapZoom(bounds, width, height) {
+            const WORLD_DIM = { height: 256, width: 256 };
+            const ZOOM_MAX = 18;
+            const latFraction = (latRad(bounds.maxLat) - latRad(bounds.minLat)) / Math.PI;
+            const lngDiff = bounds.maxLng - bounds.minLng;
+            const lngFraction = ((lngDiff < 0 ? lngDiff + 360 : lngDiff) || 0.00001) / 360;
+            const latZoom = zoomFromFraction(height, WORLD_DIM.height, Math.max(latFraction, 0.00001));
+            const lngZoom = zoomFromFraction(width, WORLD_DIM.width, Math.max(lngFraction, 0.00001));
+            return Math.max(5, Math.min(Math.floor(Math.min(latZoom, lngZoom)), ZOOM_MAX));
+        }
+
+        function latRad(lat) {
+            const sinValue = Math.sin((lat * Math.PI) / 180);
+            const radX2 = Math.log((1 + sinValue) / (1 - sinValue)) / 2;
+            return Math.max(Math.min(radX2, Math.PI), -Math.PI) / 2;
+        }
+
+        function zoomFromFraction(mapPx, worldPx, fraction) {
+            return Math.log(mapPx / worldPx / fraction) / Math.LN2;
+        }
+
         function resolvePoiPreviewUrl(poi) {
-            const matchedPhoto = resolvePoiPhotoUrl(poi);
+            const uploadedPhoto = getPoiPhotoUrls(poi)[0];
+            if (uploadedPhoto) return uploadedPhoto;
+            const matchedPhoto = resolvePoiLastDonePhotoUrl(poi);
             if (matchedPhoto) return matchedPhoto;
             return createPoiFallbackDataUri(poi);
+        }
+
+        function resolvePoiLastDonePhotoUrl(poi) {
+            return resolvePoiPhotoUrl(poi);
+        }
+
+        function createPoiStreetViewUrl(poi) {
+            if (!hasValidCoordinates(poi) || !GOOGLE_STREET_VIEW_KEY) return "";
+            const params = new URLSearchParams({
+                size: "440x320",
+                scale: "2",
+                location: `${Number(poi.latitude)},${Number(poi.longitude)}`,
+                heading: "0",
+                fov: "95",
+                pitch: "0",
+                key: GOOGLE_STREET_VIEW_KEY
+            });
+            return `https://maps.googleapis.com/maps/api/streetview?${params.toString()}`;
         }
 
         function createPoiFallbackDataUri(poi) {
@@ -2456,6 +3367,12 @@
         }
 
         function getPoiSeverityLabel(poi) {
+            if (isWeedPoi(poi)) {
+                const remainingDays = getPoiRemainingDays(poi);
+                if (remainingDays < 0) return "te laat";
+                if (remainingDays <= 7) return "bijna aan de beurt";
+                return "in rotatie";
+            }
             const age = getItemAgeHours(poi.timestamp);
             const type = normalizeType(getPoiTypeSignal(poi));
             if (type === "weed" && age <= 24) return "nu";
@@ -2466,10 +3383,46 @@
 
         function getPoiSeverityTone(poi) {
             const label = getPoiSeverityLabel(poi);
+            if (label === "te laat") return "warning";
+            if (label === "bijna aan de beurt") return "accent";
+            if (label === "in rotatie") return "info";
             if (label === "nu") return "warning";
             if (label === "nieuw") return "accent";
             if (label === "controle") return "info";
             return "success";
+        }
+
+        function isWeedPoi(poi) {
+            return normalizeType(getPoiTypeSignal(poi)) === "weed";
+        }
+
+        function getPoiLastDoneAt(poi) {
+            return isWeedPoi(poi) ? WEED_LAST_DONE_AT : safeNumber(poi.updatedAt || poi.timestamp);
+        }
+
+        function getPoiNextDueAt(poi) {
+            if (!isWeedPoi(poi)) return null;
+            return getPoiLastDoneAt(poi) + (WEED_ROTATION_DAYS * DAY_IN_MS);
+        }
+
+        function getPoiRemainingDays(poi) {
+            const nextDueAt = getPoiNextDueAt(poi);
+            if (!nextDueAt) return null;
+            return Math.ceil((nextDueAt - Date.now()) / DAY_IN_MS);
+        }
+
+        function getPoiTimeRemainingLabel(poi) {
+            const remainingDays = getPoiRemainingDays(poi);
+            if (remainingDays === null) return formatDate(poi.updatedAt || poi.timestamp);
+            if (remainingDays > 1) return `nog ${remainingDays} dagen`;
+            if (remainingDays === 1) return "nog 1 dag";
+            if (remainingDays === 0) return "vandaag aan de beurt";
+            const overdueDays = Math.abs(remainingDays);
+            return overdueDays === 1 ? "1 dag te laat" : `${overdueDays} dagen te laat`;
+        }
+
+        function getPoiScheduleBadge(poi) {
+            return isWeedPoi(poi) ? getPoiTimeRemainingLabel(poi) : formatDate(poi.timestamp);
         }
 
         function isTaskClosed(task) {
@@ -2627,37 +3580,38 @@
         }
 
         function wireMenuNavigation() {
-            document.querySelectorAll("[data-scroll-target]").forEach((button) => {
+            document.querySelectorAll("[data-page]").forEach((button) => {
                 button.addEventListener("click", () => {
-                    const targetId = button.getAttribute("data-scroll-target");
-                    const target = document.getElementById(targetId);
-                    if (!target) return;
-                    activeScrollTarget = targetId;
-                    updateMenuStates();
-                    target.scrollIntoView({ behavior: "smooth", block: "start" });
+                    const targetPage = button.getAttribute("data-page");
+                    if (!targetPage) return;
+                    activePage = targetPage;
+                    selectedItem = null;
+                    renderDashboard();
                 });
             });
-
-            window.addEventListener("scroll", updateScrollTargetFromViewport, { passive: true });
         }
 
-        function updateScrollTargetFromViewport() {
-            const ids = ["section-overview", "section-map", "section-routes", "section-planning", "section-exceptions"];
-            const firstVisible = ids.find((id) => {
-                const element = document.getElementById(id);
-                if (!element) return false;
-                const rect = element.getBoundingClientRect();
-                return rect.top <= 180 && rect.bottom >= 120;
+        function updatePageViews() {
+            const isOverviewPage = activePage === "overview";
+            document.querySelectorAll("[data-page-view]").forEach((view) => {
+                const viewName = view.getAttribute("data-page-view");
+                const shouldShow = (viewName === "overview" && isOverviewPage) || (viewName === "detail" && !isOverviewPage);
+                view.classList.toggle("active", shouldShow);
             });
-            if (firstVisible && firstVisible !== activeScrollTarget) {
-                activeScrollTarget = firstVisible;
-                updateMenuStates();
+
+            document.querySelectorAll("[data-panel]").forEach((panel) => {
+                panel.classList.toggle("active", panel.getAttribute("data-panel") === activePage);
+            });
+
+            updateMenuStates();
+            if (map) {
+                window.setTimeout(() => map.invalidateSize(), 120);
             }
         }
 
         function updateMenuStates() {
-            document.querySelectorAll("[data-scroll-target]").forEach((button) => {
-                button.classList.toggle("active", button.getAttribute("data-scroll-target") === activeScrollTarget);
+            document.querySelectorAll("[data-page]").forEach((button) => {
+                button.classList.toggle("active", button.getAttribute("data-page") === activePage);
             });
         }
     </script>
