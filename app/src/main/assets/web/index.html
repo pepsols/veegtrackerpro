@@ -1740,17 +1740,18 @@
 
         async function loadGpxAssets() {
             try {
-                const responses = await Promise.all(
-                    GPX_FILES.map(async (fileName) => {
-                        const response = await fetch(`./routes/${encodeURIComponent(fileName)}`);
-                        if (!response.ok) throw new Error(`Kon ${fileName} niet laden`);
-                        return { fileName, text: await response.text() };
-                    })
-                );
+                const [routeResponses, markerResponses] = await Promise.all([
+                    loadGpxFileSet(ROUTE_GPX_FILES),
+                    loadGpxFileSet(MARKER_GPX_FILES)
+                ]);
 
-                const parsed = responses.map(({ fileName, text }) => parseGpxAsset(fileName, text));
-                dataStore.gpxRoutes = parsed.map((entry) => entry.route);
-                dataStore.gpxPois = parsed.flatMap((entry) => entry.pois);
+                const parsedRoutes = routeResponses.map(({ fileName, text }) => parseGpxAsset(fileName, text));
+                const parsedMarkers = markerResponses.map(({ fileName, text }) => parseGpxAsset(fileName, text));
+                dataStore.gpxRoutes = parsedRoutes.map((entry) => entry.route);
+                dataStore.gpxPois = [
+                    ...parsedRoutes.flatMap((entry) => entry.pois),
+                    ...parsedMarkers.flatMap((entry) => entry.pois)
+                ];
                 updateAiSuggestions();
                 setLastUpdate();
                 renderDashboard();
@@ -1759,6 +1760,16 @@
                 document.getElementById("sync-status").textContent = "GPX deels niet geladen";
                 showToast("Kon niet alle GPX-bestanden laden");
             }
+        }
+
+        async function loadGpxFileSet(fileNames) {
+            return Promise.all(
+                fileNames.map(async (fileName) => {
+                    const response = await fetch(`./routes/${encodeURIComponent(fileName)}`);
+                    if (!response.ok) throw new Error(`Kon ${fileName} niet laden`);
+                    return { fileName, text: await response.text() };
+                })
+            );
         }
 
         function updateAiSuggestions() {
