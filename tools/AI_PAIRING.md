@@ -7,6 +7,8 @@ Bestanden:
 - `tools/codex.ps1`
 - `tools/codex-gemini.ps1`
 - `tools/llama-delegate.ps1`
+- `tools/llama-android-build.ps1`
+- `tools/llama-html-delegate.ps1`
 
 `tools/codex.ps1` doet alleen dit:
 
@@ -61,6 +63,26 @@ Lokale Llama-delegatie via de OpenAI-compatible endpoint:
 
 ```powershell
 "Noem drie risico's in deze wijziging" | .\tools\llama-delegate.ps1
+```
+
+Android/Gradle buildtaken delegeren naar Llama:
+
+```powershell
+.\tools\llama-android-build.ps1
+```
+
+```powershell
+.\tools\llama-android-build.ps1 -GradleTask ":app:assembleDebug"
+```
+
+HTML/dashboardtaken delegeren naar Llama:
+
+```powershell
+.\tools\llama-html-delegate.ps1 "Review de dashboard layout op mobiele risico's"
+```
+
+```powershell
+.\tools\llama-html-delegate.ps1 -HtmlPath "dashboard/site-structuur-preview.html" "Vat de structuur samen"
 ```
 
 Voorwaarden:
