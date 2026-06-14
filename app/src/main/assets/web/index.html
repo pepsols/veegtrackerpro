@@ -683,6 +683,93 @@
             aspect-ratio: 1.5 / 1;
         }
 
+        .poi-map-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 18px;
+            border: 4px solid #2d7d4f;
+            background: #fffdf9;
+            box-shadow: 0 12px 26px rgba(35, 32, 24, 0.28);
+            overflow: visible;
+            position: relative;
+        }
+
+        .poi-map-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: 15px;
+        }
+
+        .poi-map-icon::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: -9px;
+            width: 16px;
+            height: 16px;
+            transform: translateX(-50%) rotate(45deg);
+            background: inherit;
+            border-right: 4px solid #2d7d4f;
+            border-bottom: 4px solid #2d7d4f;
+            box-shadow: 5px 5px 10px rgba(35, 32, 24, 0.16);
+        }
+
+        .poi-map-icon.rotation-green {
+            border-color: #2d7d4f;
+        }
+
+        .poi-map-icon.rotation-green::after {
+            border-color: #2d7d4f;
+        }
+
+        .poi-map-icon.rotation-yellow {
+            border-color: #d6a52b;
+        }
+
+        .poi-map-icon.rotation-yellow::after {
+            border-color: #d6a52b;
+        }
+
+        .poi-map-icon.rotation-red {
+            border-color: #b95027;
+        }
+
+        .poi-map-icon.rotation-red::after {
+            border-color: #b95027;
+        }
+
+        .poi-map-icon.fallback {
+            display: grid;
+            place-items: center;
+            color: #fffdf9;
+            background: #b95027;
+            font-size: 21px;
+        }
+
+        .poi-map-icon.weed.fallback {
+            background: #2d7d4f;
+        }
+
+        .poi-map-icon.rotation-yellow.fallback {
+            background: #d6a52b;
+        }
+
+        .poi-map-icon.rotation-red.fallback {
+            background: #b95027;
+        }
+
+        .leaflet-popup-content .marker-popup-thumb {
+            width: 160px;
+            height: 112px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid rgba(215, 196, 170, 0.95);
+            display: block;
+            margin-bottom: 8px;
+        }
+
         .item-main {
             min-width: 0;
             display: flex;
@@ -1594,6 +1681,7 @@
             ai: []
         };
         const WEED_LAST_DONE_AT = new Date(2026, 4, 15).getTime();
+        const WEED_LAST_DONE_LABEL = "15/5";
         const WEED_ROTATION_DAYS = 42;
         const DAY_IN_MS = 86400000;
         let selectedItem = null;
@@ -1922,12 +2010,9 @@
 
             filtered.pois.forEach((poi) => {
                 if (!hasValidCoordinates(poi)) return;
-                const isWeed = normalizeType(getPoiTypeSignal(poi)) === "weed";
-                const icon = isWeed ? weedIcon : alertIcon;
+                const icon = createPoiMapIcon(poi);
                 const marker = L.marker([Number(poi.latitude), Number(poi.longitude)], { icon }).addTo(map);
-                marker.bindPopup(
-                    `<strong>${escapeHtml(poi.type || "Melding")}</strong><br>${escapeHtml(poi.description || "Geen toelichting")}`
-                );
+                marker.bindPopup(buildLeafletPoiPopup(poi));
                 marker.on("click", () => {
                     selectItem("poi", poi, "map");
                     openMapPopup("poi", poi);
@@ -1946,6 +2031,39 @@
             } else if (filtered.routes.length > 0) {
                 fitToRoutes(filtered.routes);
             }
+        }
+
+        function createPoiMapIcon(poi) {
+            const isWeed = isWeedPoi(poi);
+            const photoUrl = resolvePoiPreviewUrl(poi);
+            const hasPhoto = photoUrl && !String(photoUrl).startsWith("data:image/svg+xml");
+            const rotationClass = getPoiRotationClass(poi);
+            const html = hasPhoto
+                ? `<div class="poi-map-icon${isWeed ? " weed" : ""} ${rotationClass}"><img src="${escapeAttribute(photoUrl)}" alt="" /></div>`
+                : `<div class="poi-map-icon${isWeed ? " weed" : ""} ${rotationClass} fallback"><i class="fas ${isWeed ? "fa-seedling" : "fa-triangle-exclamation"}"></i></div>`;
+            return L.divIcon({
+                html,
+                iconSize: [54, 64],
+                iconAnchor: [27, 62],
+                popupAnchor: [0, -58],
+                className: "poi-thumbnail-marker"
+            });
+        }
+
+        function buildLeafletPoiPopup(poi) {
+            const previewUrl = resolvePoiPreviewUrl(poi);
+            const hasPhoto = previewUrl && !String(previewUrl).startsWith("data:image/svg+xml");
+            const doneLabel = getPoiDoneLabel(poi);
+            const rotationLabel = isRotatingPoi(poi) ? getPoiTimeRemainingLabel(poi) : "";
+            return `
+                <div>
+                    ${hasPhoto ? `<img class="marker-popup-thumb" src="${escapeAttribute(previewUrl)}" alt="Miniatuur van ${escapeAttribute(poi.type || "marker")}" />` : ""}
+                    <strong>${escapeHtml(poi.type || "Melding")}</strong><br>
+                    ${escapeHtml(poi.description || "Geen toelichting")}<br>
+                    ${doneLabel ? `<small>Gedaan op ${escapeHtml(doneLabel)}</small>` : ""}
+                    ${rotationLabel ? `<br><small>Rotatie 6 weken: ${escapeHtml(rotationLabel)}</small>` : ""}
+                </div>
+            `;
         }
 
         function fitToPois(pois) {
@@ -2003,7 +2121,7 @@
                         subtitle: poi.description || `Locatie ${formatCoordinates(poi)}`,
                         badges: [
                             { label: getPoiSeverityLabel(poi), tone: getPoiSeverityTone(poi) },
-                            { label: getPoiScheduleBadge(poi), tone: isWeedPoi(poi) ? "info" : "accent" }
+                            { label: getPoiScheduleBadge(poi), tone: getPoiScheduleTone(poi) }
                         ]
                     })
                 );
@@ -2021,7 +2139,7 @@
                         subtitle: poi.actionTaken || poi.description || `Bijgewerkt op ${formatDate(poi.updatedAt || poi.timestamp)}`,
                         badges: [
                             { label: poi.status || "afgerond", tone: "success" },
-                            { label: getPoiScheduleBadge(poi), tone: isWeedPoi(poi) ? "info" : "accent" }
+                            { label: getPoiScheduleBadge(poi), tone: getPoiScheduleTone(poi) }
                         ]
                     })
                 );
@@ -2114,7 +2232,7 @@
                     item: poi,
                     title: poi.type || "Nieuwe melding",
                     subtitle: poi.description || `Nieuwe melding op ${formatCoordinates(poi)}`,
-                    badges: [{ label: getPoiScheduleBadge(poi), tone: isWeedPoi(poi) ? "info" : "accent" }]
+                    badges: [{ label: getPoiScheduleBadge(poi), tone: getPoiScheduleTone(poi) }]
                 }));
 
             return [...urgentPois, ...staleTasks].sort((a, b) => {
@@ -2196,6 +2314,7 @@
                 const photoUrls = getPoiPhotoUrls(item);
                 const lastDonePhotoUrl = resolvePoiLastDonePhotoUrl(item);
                 const streetViewUrl = createPoiStreetViewUrl(item);
+                const extraPhotoUrls = photoUrls.filter((url) => url !== lastDonePhotoUrl);
                 return {
                     title: item.type || "Melding",
                     summary: item.description || "Melding uit het veld met locatie en tijdstip.",
@@ -2212,9 +2331,9 @@
                                 ${detailRow("Tijdstip", formatDate(item.timestamp, true))}
                                 ${detailRow("Bijgewerkt", formatDate(item.updatedAt || item.timestamp, true))}
                                 ${item.completedAt ? detailRow("Laatst voltooid", formatDate(item.completedAt, true)) : ""}
-                                ${isWeedPoi(item) ? detailRow("Laatst gedaan", formatDate(WEED_LAST_DONE_AT, true)) : ""}
-                                ${isWeedPoi(item) ? detailRow("Rotatie", "6 weken") : ""}
-                                ${isWeedPoi(item) ? detailRow("Nog te gaan", getPoiTimeRemainingLabel(item)) : ""}
+                                ${isRotatingPoi(item) ? detailRow("Laatst gedaan", formatDate(WEED_LAST_DONE_AT, true)) : ""}
+                                ${isRotatingPoi(item) ? detailRow("Rotatie", "6 weken") : ""}
+                                ${isRotatingPoi(item) ? detailRow("Nog te gaan", getPoiTimeRemainingLabel(item)) : ""}
                                 ${detailRow("Coördinaten", formatCoordinates(item))}
                                 ${detailRow("Status", item.status || "open")}
                                 ${detailRow("Urgentie", getPoiSeverityLabel(item))}
@@ -2228,18 +2347,19 @@
                         </div>
                         ${lastDonePhotoUrl ? `
                         <div class="detail-card">
-                            <h4>Laatste foto van vorige beurt</h4>
+                            <h4>Gedaan op ${WEED_LAST_DONE_LABEL}</h4>
+                            <p class="panel-copy">Bestaande foto gekoppeld aan deze marker.</p>
                             <img src="${escapeAttribute(lastDonePhotoUrl)}" alt="Laatste beurtfoto" style="width:100%;height:180px;object-fit:cover;border-radius:14px;border:1px solid rgba(215,196,170,0.95);" />
                         </div>
                         ` : ""}
-                        ${photoUrls.length > 0 ? `
+                        ${extraPhotoUrls.length > 0 ? `
                         <div class="detail-card">
                             <h4>Toegevoegde foto's</h4>
                             <div class="item-meta">
-                                ${photoUrls.map((url, index) => `<span class="badge info">Foto ${index + 1}</span>`).join("")}
+                                ${extraPhotoUrls.map((url, index) => `<span class="badge info">Foto ${index + 1}</span>`).join("")}
                             </div>
                             <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;">
-                                ${photoUrls.map((url, index) => `<img src="${escapeAttribute(url)}" alt="Puntfoto ${index + 1}" style="width:100%;height:120px;object-fit:cover;border-radius:14px;border:1px solid rgba(215,196,170,0.95);" />`).join("")}
+                                ${extraPhotoUrls.map((url, index) => `<img src="${escapeAttribute(url)}" alt="Puntfoto ${index + 1}" style="width:100%;height:120px;object-fit:cover;border-radius:14px;border:1px solid rgba(215,196,170,0.95);" />`).join("")}
                             </div>
                         </div>
                         ` : ""}
@@ -2411,7 +2531,7 @@
                 return `${safeNumber(item.distanceKm).toFixed(1)} km • ${pointCount} punten`;
             }
             if (kind === "poi") {
-                if (isWeedPoi(item)) return `${formatDate(WEED_LAST_DONE_AT)} • ${getPoiTimeRemainingLabel(item)}`;
+                if (isRotatingPoi(item)) return `${formatDate(WEED_LAST_DONE_AT)} • ${getPoiTimeRemainingLabel(item)}`;
                 return `${item.status || getPoiSeverityLabel(item)} • ${formatDate(item.updatedAt || item.timestamp)}`;
             }
             if (kind === "task") {
@@ -2754,6 +2874,7 @@
             const photoUrls = getPoiPhotoUrls(item);
             const lastDonePhotoUrl = resolvePoiLastDonePhotoUrl(item);
             const streetViewUrl = createPoiStreetViewUrl(item);
+            const extraPhotoUrls = photoUrls.filter((url) => url !== lastDonePhotoUrl);
             return `
                 <div class="detail-tabs">
                     <div class="detail-tablist">
@@ -2769,9 +2890,9 @@
                                 ${detailRow("Tijdstip", formatDate(item.timestamp, true))}
                                 ${detailRow("Bijgewerkt", formatDate(item.updatedAt || item.timestamp, true))}
                                 ${item.completedAt ? detailRow("Laatst voltooid", formatDate(item.completedAt, true)) : ""}
-                                ${isWeedPoi(item) ? detailRow("Laatst gedaan", formatDate(WEED_LAST_DONE_AT, true)) : ""}
-                                ${isWeedPoi(item) ? detailRow("Rotatie", "6 weken") : ""}
-                                ${isWeedPoi(item) ? detailRow("Nog te gaan", getPoiTimeRemainingLabel(item)) : ""}
+                                ${isRotatingPoi(item) ? detailRow("Laatst gedaan", formatDate(WEED_LAST_DONE_AT, true)) : ""}
+                                ${isRotatingPoi(item) ? detailRow("Rotatie", "6 weken") : ""}
+                                ${isRotatingPoi(item) ? detailRow("Nog te gaan", getPoiTimeRemainingLabel(item)) : ""}
                                 ${detailRow("Coördinaten", formatCoordinates(item))}
                                 ${detailRow("Status", item.status || "open")}
                             </div>
@@ -2797,7 +2918,8 @@
                     <div class="detail-tabpanel" data-tab-panel="poi-images">
                         ${lastDonePhotoUrl ? `
                         <div class="detail-card">
-                            <h4>Laatste foto van vorige beurt</h4>
+                            <h4>Gedaan op ${WEED_LAST_DONE_LABEL}</h4>
+                            <p class="panel-copy">Bestaande foto gekoppeld aan deze marker.</p>
                             <img src="${escapeAttribute(lastDonePhotoUrl)}" alt="Laatste beurtfoto" style="width:100%;height:180px;object-fit:cover;border-radius:14px;border:1px solid rgba(215,196,170,0.95);" />
                         </div>` : ""}
                         ${streetViewUrl ? `
@@ -2805,11 +2927,11 @@
                             <h4>Street View op locatie</h4>
                             <img src="${escapeAttribute(streetViewUrl)}" alt="Street View op locatie" onerror="this.onerror=null;this.src='${escapeAttribute(createPoiFallbackDataUri(item))}'" style="width:100%;height:180px;object-fit:cover;border-radius:14px;border:1px solid rgba(215,196,170,0.95);" />
                         </div>` : ""}
-                        ${photoUrls.length > 0 ? `
+                        ${extraPhotoUrls.length > 0 ? `
                         <div class="detail-card">
                             <h4>Toegevoegde foto's</h4>
                             <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
-                                ${photoUrls.map((url, index) => `<img src="${escapeAttribute(url)}" alt="Puntfoto ${index + 1}" style="width:100%;height:120px;object-fit:cover;border-radius:14px;border:1px solid rgba(215,196,170,0.95);" />`).join("")}
+                                ${extraPhotoUrls.map((url, index) => `<img src="${escapeAttribute(url)}" alt="Puntfoto ${index + 1}" style="width:100%;height:120px;object-fit:cover;border-radius:14px;border:1px solid rgba(215,196,170,0.95);" />`).join("")}
                             </div>
                         </div>` : ""}
                     </div>
@@ -3378,7 +3500,7 @@
         }
 
         function getPoiSeverityLabel(poi) {
-            if (isWeedPoi(poi)) {
+            if (isRotatingPoi(poi)) {
                 const remainingDays = getPoiRemainingDays(poi);
                 if (remainingDays < 0) return "te laat";
                 if (remainingDays <= 7) return "bijna aan de beurt";
@@ -3407,12 +3529,24 @@
             return normalizeType(getPoiTypeSignal(poi)) === "weed";
         }
 
+        function isMarkerPoi(poi) {
+            return MARKER_GPX_FILES.includes(poi.sourceFile || "");
+        }
+
+        function isRotatingPoi(poi) {
+            return isWeedPoi(poi) || isMarkerPoi(poi);
+        }
+
+        function getPoiDoneLabel(poi) {
+            return isRotatingPoi(poi) ? WEED_LAST_DONE_LABEL : "";
+        }
+
         function getPoiLastDoneAt(poi) {
-            return isWeedPoi(poi) ? WEED_LAST_DONE_AT : safeNumber(poi.updatedAt || poi.timestamp);
+            return isRotatingPoi(poi) ? WEED_LAST_DONE_AT : safeNumber(poi.updatedAt || poi.timestamp);
         }
 
         function getPoiNextDueAt(poi) {
-            if (!isWeedPoi(poi)) return null;
+            if (!isRotatingPoi(poi)) return null;
             return getPoiLastDoneAt(poi) + (WEED_ROTATION_DAYS * DAY_IN_MS);
         }
 
@@ -3433,7 +3567,29 @@
         }
 
         function getPoiScheduleBadge(poi) {
-            return isWeedPoi(poi) ? getPoiTimeRemainingLabel(poi) : formatDate(poi.timestamp);
+            return isRotatingPoi(poi) ? getPoiTimeRemainingLabel(poi) : formatDate(poi.timestamp);
+        }
+
+        function getPoiRotationState(poi) {
+            if (!isRotatingPoi(poi)) return "none";
+            const remainingDays = getPoiRemainingDays(poi);
+            if (remainingDays === null) return "none";
+            if (remainingDays <= 0) return "red";
+            if (remainingDays <= 7) return "yellow";
+            return "green";
+        }
+
+        function getPoiRotationClass(poi) {
+            const state = getPoiRotationState(poi);
+            return state === "none" ? "" : `rotation-${state}`;
+        }
+
+        function getPoiScheduleTone(poi) {
+            const state = getPoiRotationState(poi);
+            if (state === "red") return "warning";
+            if (state === "yellow") return "accent";
+            if (state === "green") return "success";
+            return "accent";
         }
 
         function isTaskClosed(task) {
@@ -3465,13 +3621,19 @@
             const waypoints = Array.from(xml.querySelectorAll("wpt")).map((node, index) => {
                 const latitude = Number(node.getAttribute("lat"));
                 const longitude = Number(node.getAttribute("lon"));
+                const isMarkerFile = MARKER_GPX_FILES.includes(fileName);
                 return {
                     id: `gpx-poi-${fileName}-${index}`,
                     source: "gpx",
+                    sourceFile: fileName,
                     routeId: `gpx-route-${fileName}`,
                     latitude,
                     longitude,
                     timestamp: toTimestamp(firstText(node, ["time"])) || createdAt,
+                    updatedAt: isMarkerFile ? WEED_LAST_DONE_AT : (toTimestamp(firstText(node, ["time"])) || createdAt),
+                    completedAt: isMarkerFile ? WEED_LAST_DONE_AT : null,
+                    status: isMarkerFile ? "afgerond" : "open",
+                    actionTaken: isMarkerFile ? `Gedaan op ${WEED_LAST_DONE_LABEL}` : "",
                     type: firstText(node, ["name"]) || "Waypoint",
                     description: firstText(node, ["desc", "cmt"]) || fileName,
                     icon: firstText(node, ["sym"]) || ""
