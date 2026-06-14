@@ -1671,6 +1671,29 @@
             "Rijsenburgselaan.Foto 1 (link).145050(1).jpg",
             "Rijsenburgselaan.Foto 1 (link).145050(2).jpg"
         ];
+        const MARKER_PHOTO_LOCATIONS = [
+            { fileName: "2.Foto-s.040148.jpg", latitude: 52.032396, longitude: 5.345959 },
+            { fileName: "3.Foto-s.032351.jpg", latitude: 52.029947, longitude: 5.347139 },
+            { fileName: "5.Foto-s.043559.jpg", latitude: 52.026233, longitude: 5.350669 },
+            { fileName: "7.Foto-s.050119.jpg", latitude: 52.029218, longitude: 5.34671 },
+            { fileName: "12.Foto-s.064130.jpg", latitude: 52.03336, longitude: 5.348616 },
+            { fileName: "13.Foto-s.064949.jpg", latitude: 52.051088, longitude: 5.269162 },
+            { fileName: "14.Foto-s.065337.jpg", latitude: 52.03239, longitude: 5.345978 },
+            { fileName: "17.Foto-s.065950.jpg", latitude: 52.030012, longitude: 5.350758 },
+            { fileName: "19.Foto-s.070911.jpg", latitude: 52.03172, longitude: 5.348369 },
+            { fileName: "21.Foto-s.071156.jpg", latitude: 52.051154, longitude: 5.269081 },
+            { fileName: "22.Foto-s.071412.jpg", latitude: 52.035708, longitude: 5.316203 },
+            { fileName: "23.Foto-s.071618.jpg", latitude: 52.02783, longitude: 5.345963 },
+            { fileName: "26.Foto-s.072416.jpg", latitude: 52.028901, longitude: 5.346526 },
+            { fileName: "N225 N227.Foto 2 (link).205056.jpg", latitude: 52.039334, longitude: 5.348587 },
+            { fileName: "Rijsenburgselaan 2.Foto 1 (link).145253.jpg", latitude: 52.039813, longitude: 5.346225 },
+            { fileName: "Rijsenburgselaan 3.Foto 1 (link).145316(1).jpg", latitude: 52.028987, longitude: 5.346682 },
+            { fileName: "Rijsenburgselaan 3.Foto 1 (link).145316.jpg", latitude: 52.030081, longitude: 5.346621 },
+            { fileName: "Rijsenburgselaan 5.Foto 1 (link).145414(2).jpg", latitude: 52.030235, longitude: 5.344806 },
+            { fileName: "Rijsenburgselaan 5.Foto 1 (link).145414.jpg", latitude: 52.029605, longitude: 5.34676 },
+            { fileName: "Rijsenburgselaan.Foto 1 (link).144315(2).jpg", latitude: 52.03188, longitude: 5.345834 },
+            { fileName: "Rijsenburgselaan.Foto 1 (link).145030(2).jpg", latitude: 52.036093, longitude: 5.340005 }
+        ];
 
         const dataStore = {
             cloudRoutes: [],
@@ -1693,6 +1716,8 @@
         let activePage = "overview";
         const routePreviewCache = new Map();
         const routePreviewPending = new Set();
+        const poiStreetViewPreviewCache = new Map();
+        const poiStreetViewPreviewPending = new Set();
 
         const areaFilterEl = document.getElementById("area-filter");
         const statusFilterEl = document.getElementById("status-filter");
@@ -1906,6 +1931,7 @@
         function renderDashboard() {
             const filtered = getFilteredData();
             requestRoutePreviewHydration(filtered.routes);
+            requestPoiStreetViewPreviewHydration(filtered.pois);
             renderPriorityStrip(filtered);
             renderMap(filtered);
             renderOperationsSection(filtered);
@@ -2036,10 +2062,11 @@
         function createPoiMapIcon(poi) {
             const isWeed = isWeedPoi(poi);
             const photoUrl = resolvePoiPreviewUrl(poi);
+            const fallbackUrl = createPoiFallbackDataUri(poi);
             const hasPhoto = photoUrl && !String(photoUrl).startsWith("data:image/svg+xml");
             const rotationClass = getPoiRotationClass(poi);
             const html = hasPhoto
-                ? `<div class="poi-map-icon${isWeed ? " weed" : ""} ${rotationClass}"><img src="${escapeAttribute(photoUrl)}" alt="" /></div>`
+                ? `<div class="poi-map-icon${isWeed ? " weed" : ""} ${rotationClass}"><img src="${escapeAttribute(photoUrl)}" alt="" onerror="this.onerror=null;this.src='${escapeAttribute(fallbackUrl)}'" /></div>`
                 : `<div class="poi-map-icon${isWeed ? " weed" : ""} ${rotationClass} fallback"><i class="fas ${isWeed ? "fa-seedling" : "fa-triangle-exclamation"}"></i></div>`;
             return L.divIcon({
                 html,
@@ -2052,12 +2079,13 @@
 
         function buildLeafletPoiPopup(poi) {
             const previewUrl = resolvePoiPreviewUrl(poi);
+            const fallbackUrl = createPoiFallbackDataUri(poi);
             const hasPhoto = previewUrl && !String(previewUrl).startsWith("data:image/svg+xml");
             const doneLabel = getPoiDoneLabel(poi);
             const rotationLabel = isRotatingPoi(poi) ? getPoiTimeRemainingLabel(poi) : "";
             return `
                 <div>
-                    ${hasPhoto ? `<img class="marker-popup-thumb" src="${escapeAttribute(previewUrl)}" alt="Miniatuur van ${escapeAttribute(poi.type || "marker")}" />` : ""}
+                    ${hasPhoto ? `<img class="marker-popup-thumb" src="${escapeAttribute(previewUrl)}" alt="Miniatuur van ${escapeAttribute(poi.type || "marker")}" onerror="this.onerror=null;this.src='${escapeAttribute(fallbackUrl)}'" />` : ""}
                     <strong>${escapeHtml(poi.type || "Melding")}</strong><br>
                     ${escapeHtml(poi.description || "Geen toelichting")}<br>
                     ${doneLabel ? `<small>Gedaan op ${escapeHtml(doneLabel)}</small>` : ""}
@@ -2313,7 +2341,7 @@
             if (kind === "poi") {
                 const photoUrls = getPoiPhotoUrls(item);
                 const lastDonePhotoUrl = resolvePoiLastDonePhotoUrl(item);
-                const streetViewUrl = createPoiStreetViewUrl(item);
+                const locationPreviewUrl = createPoiLocationPreviewUrl(item);
                 const extraPhotoUrls = photoUrls.filter((url) => url !== lastDonePhotoUrl);
                 return {
                     title: item.type || "Melding",
@@ -2363,10 +2391,10 @@
                             </div>
                         </div>
                         ` : ""}
-                        ${streetViewUrl ? `
+                        ${locationPreviewUrl ? `
                         <div class="detail-card">
-                            <h4>Street View op locatie</h4>
-                            <img src="${escapeAttribute(streetViewUrl)}" alt="Street View op locatie" onerror="this.onerror=null;this.src='${escapeAttribute(createPoiFallbackDataUri(item))}'" style="width:100%;height:180px;object-fit:cover;border-radius:14px;border:1px solid rgba(215,196,170,0.95);" />
+                            <h4>Locatiebeeld</h4>
+                            <img src="${escapeAttribute(locationPreviewUrl)}" alt="Locatiebeeld" onerror="this.onerror=null;this.src='${escapeAttribute(createPoiFallbackDataUri(item))}'" style="width:100%;height:180px;object-fit:cover;border-radius:14px;border:1px solid rgba(215,196,170,0.95);" />
                         </div>
                         ` : ""}
                         ${item.workLog ? `
@@ -2873,7 +2901,7 @@
         function buildPoiTabbedPopup(item) {
             const photoUrls = getPoiPhotoUrls(item);
             const lastDonePhotoUrl = resolvePoiLastDonePhotoUrl(item);
-            const streetViewUrl = createPoiStreetViewUrl(item);
+            const locationPreviewUrl = createPoiLocationPreviewUrl(item);
             const extraPhotoUrls = photoUrls.filter((url) => url !== lastDonePhotoUrl);
             return `
                 <div class="detail-tabs">
@@ -2922,10 +2950,10 @@
                             <p class="panel-copy">Bestaande foto gekoppeld aan deze marker.</p>
                             <img src="${escapeAttribute(lastDonePhotoUrl)}" alt="Laatste beurtfoto" style="width:100%;height:180px;object-fit:cover;border-radius:14px;border:1px solid rgba(215,196,170,0.95);" />
                         </div>` : ""}
-                        ${streetViewUrl ? `
+                        ${locationPreviewUrl ? `
                         <div class="detail-card">
-                            <h4>Street View op locatie</h4>
-                            <img src="${escapeAttribute(streetViewUrl)}" alt="Street View op locatie" onerror="this.onerror=null;this.src='${escapeAttribute(createPoiFallbackDataUri(item))}'" style="width:100%;height:180px;object-fit:cover;border-radius:14px;border:1px solid rgba(215,196,170,0.95);" />
+                            <h4>Locatiebeeld</h4>
+                            <img src="${escapeAttribute(locationPreviewUrl)}" alt="Locatiebeeld" onerror="this.onerror=null;this.src='${escapeAttribute(createPoiFallbackDataUri(item))}'" style="width:100%;height:180px;object-fit:cover;border-radius:14px;border:1px solid rgba(215,196,170,0.95);" />
                         </div>` : ""}
                         ${extraPhotoUrls.length > 0 ? `
                         <div class="detail-card">
@@ -3349,6 +3377,10 @@
             if (uploadedPhoto) return uploadedPhoto;
             const matchedPhoto = resolvePoiLastDonePhotoUrl(poi);
             if (matchedPhoto) return matchedPhoto;
+            const streetViewPreview = poiStreetViewPreviewCache.get(poi.id);
+            if (streetViewPreview?.status === "streetview") return streetViewPreview.src;
+            const osmUrl = createPoiOpenStreetMapUrl(poi);
+            if (osmUrl) return osmUrl;
             return createPoiFallbackDataUri(poi);
         }
 
@@ -3370,16 +3402,73 @@
             return `https://maps.googleapis.com/maps/api/streetview?${params.toString()}`;
         }
 
+        function createPoiOpenStreetMapUrl(poi) {
+            if (!hasValidCoordinates(poi)) return "";
+            const latitude = Number(poi.latitude);
+            const longitude = Number(poi.longitude);
+            const params = new URLSearchParams({
+                center: `${latitude},${longitude}`,
+                zoom: "17",
+                size: "440x320",
+                maptype: "mapnik"
+            });
+            params.append("markers", `${latitude},${longitude},ol-marker`);
+            return `https://staticmap.openstreetmap.de/staticmap.php?${params.toString()}`;
+        }
+
+        function createPoiLocationPreviewUrl(poi) {
+            const streetViewPreview = poiStreetViewPreviewCache.get(poi.id);
+            if (streetViewPreview?.status === "streetview") return streetViewPreview.src;
+            return createPoiOpenStreetMapUrl(poi);
+        }
+
+        function requestPoiStreetViewPreviewHydration(pois) {
+            if (!Array.isArray(pois) || !GOOGLE_STREET_VIEW_KEY) return;
+            pois.forEach((poi) => {
+                if (!poi || !hasValidCoordinates(poi)) return;
+                if (getPoiPhotoUrls(poi)[0] || resolvePoiLastDonePhotoUrl(poi)) return;
+                if (poiStreetViewPreviewCache.has(poi.id) || poiStreetViewPreviewPending.has(poi.id)) return;
+                poiStreetViewPreviewPending.add(poi.id);
+                hydratePoiStreetViewPreview(poi);
+            });
+        }
+
+        async function hydratePoiStreetViewPreview(poi) {
+            try {
+                const metadata = await fetchStreetViewMetadata([Number(poi.latitude), Number(poi.longitude)]);
+                poiStreetViewPreviewCache.set(poi.id, metadata.status === "OK"
+                    ? { status: "streetview", src: createPoiStreetViewUrl(poi) }
+                    : { status: "osm", src: createPoiOpenStreetMapUrl(poi) });
+            } catch (_error) {
+                poiStreetViewPreviewCache.set(poi.id, { status: "osm", src: createPoiOpenStreetMapUrl(poi) });
+            } finally {
+                poiStreetViewPreviewPending.delete(poi.id);
+                renderDashboard();
+            }
+        }
+
         function createPoiFallbackDataUri(poi) {
             const color = normalizeType(getPoiTypeSignal(poi)) === "weed" ? "#2d7d4f" : "#b95027";
             const label = escapeSvgText(poi.type || "Punt");
             const subtitle = escapeSvgText((poi.description || formatCoordinates(poi)).slice(0, 42));
+            const point = hasValidCoordinates(poi)
+                ? projectPoiFallbackPoint(Number(poi.latitude), Number(poi.longitude))
+                : { x: 110, y: 64 };
             const svg = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="220" height="160" viewBox="0 0 220 160">
+                    <defs>
+                        <pattern id="poi-grid" width="34" height="34" patternUnits="userSpaceOnUse">
+                            <rect width="34" height="34" fill="#eef3ea"/>
+                            <path d="M0 17h34M17 0v34" stroke="#d7e2d2" stroke-width="1"/>
+                            <path d="M0 8h34M9 0v34" stroke="#f8fbf4" stroke-width="5" opacity="0.9"/>
+                        </pattern>
+                    </defs>
                     <rect width="220" height="160" rx="18" fill="#f4efe6"/>
-                    <rect x="8" y="8" width="204" height="144" rx="14" fill="#fffdf9" stroke="#d7c4aa"/>
-                    <circle cx="110" cy="58" r="24" fill="${color}" opacity="0.16"/>
-                    <path d="M110 33c-10.3 0-18.5 8.2-18.5 18.5 0 13.1 18.5 34.5 18.5 34.5s18.5-21.4 18.5-34.5C128.5 41.2 120.3 33 110 33zm0 25.5a7 7 0 1 1 0-14 7 7 0 0 1 0 14z" fill="${color}"/>
+                    <rect x="8" y="8" width="204" height="144" rx="14" fill="url(#poi-grid)" stroke="#d7c4aa"/>
+                    <path d="M18 116 C58 96, 75 104, 104 82 S153 52, 200 62" fill="none" stroke="#bdd0b2" stroke-width="10" stroke-linecap="round" opacity="0.82"/>
+                    <path d="M20 42 C54 54, 82 42, 116 50 S164 79, 198 104" fill="none" stroke="#c9d8c1" stroke-width="7" stroke-linecap="round" opacity="0.72"/>
+                    <circle cx="${point.x}" cy="${point.y}" r="22" fill="#fffdf9" stroke="${color}" stroke-width="5"/>
+                    <path d="M${point.x} ${point.y - 15}c-8.3 0-15 6.7-15 15 0 10.6 15 27.8 15 27.8s15-17.2 15-27.8c0-8.3-6.7-15-15-15zm0 20.6a5.6 5.6 0 1 1 0-11.2 5.6 5.6 0 0 1 0 11.2z" fill="${color}"/>
                     <text x="18" y="116" font-size="13" font-family="Segoe UI, Arial" font-weight="700" fill="#1f2c21">${label}</text>
                     <text x="18" y="136" font-size="12" font-family="Segoe UI, Arial" fill="#667161">${subtitle}</text>
                 </svg>
@@ -3387,11 +3476,25 @@
             return svgToDataUri(svg);
         }
 
+        function projectPoiFallbackPoint(latitude, longitude) {
+            const latSeed = Math.abs(Math.sin(latitude * 34.17));
+            const lngSeed = Math.abs(Math.cos(longitude * 28.93));
+            return {
+                x: 52 + (lngSeed * 116),
+                y: 34 + (latSeed * 54)
+            };
+        }
+
         function resolvePoiPhotoUrl(poi) {
+            if (isMarkerPoi(poi)) {
+                const nearbyPhoto = findNearestMarkerPhoto(poi, 150);
+                return nearbyPhoto ? `./marker-images/${encodeURIComponent(nearbyPhoto.fileName)}` : "";
+            }
+
             const signal = normalizeLookupText(`${poi.type || ""} ${poi.description || ""}`);
             const numericPrefix = extractLeadingNumber(poi.description || poi.type || "");
             const exactNumericMatch = numericPrefix
-                ? MARKER_PHOTO_FILES.find((fileName) => normalizeLookupText(fileName).startsWith(`${numericPrefix} foto`))
+                ? findMarkerPhotoByNumber(numericPrefix)
                 : "";
             if (exactNumericMatch) {
                 return `./marker-images/${encodeURIComponent(exactNumericMatch)}`;
@@ -3406,6 +3509,25 @@
             }
 
             return "";
+        }
+
+        function findNearestMarkerPhoto(poi, maxDistanceMeters) {
+            if (!hasValidCoordinates(poi)) return null;
+            const latitude = Number(poi.latitude);
+            const longitude = Number(poi.longitude);
+            return MARKER_PHOTO_LOCATIONS
+                .map((entry) => ({
+                    ...entry,
+                    distanceMeters: haversineDistanceKm([latitude, longitude], [entry.latitude, entry.longitude]) * 1000
+                }))
+                .filter((entry) => entry.distanceMeters <= maxDistanceMeters)
+                .sort((left, right) => left.distanceMeters - right.distanceMeters)[0] || null;
+        }
+
+        function findMarkerPhotoByNumber(numberValue) {
+            const normalizedNumber = String(Number(numberValue));
+            if (!normalizedNumber || normalizedNumber === "NaN") return "";
+            return MARKER_PHOTO_FILES.find((fileName) => normalizeLookupText(fileName).startsWith(`${normalizedNumber} foto`)) || "";
         }
 
         function createLabelPreviewDataUri(title, label, color) {
@@ -3626,6 +3748,7 @@
                     id: `gpx-poi-${fileName}-${index}`,
                     source: "gpx",
                     sourceFile: fileName,
+                    markerIndex: isMarkerFile ? index : null,
                     routeId: `gpx-route-${fileName}`,
                     latitude,
                     longitude,

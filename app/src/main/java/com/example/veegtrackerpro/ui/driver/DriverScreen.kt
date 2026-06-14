@@ -2,6 +2,7 @@ package com.example.veegtrackerpro.ui.driver
 
 import android.Manifest
 import android.net.Uri
+import android.speech.tts.TextToSpeech
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -65,6 +66,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -87,7 +89,9 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.veegtrackerpro.R
 import com.example.veegtrackerpro.data.local.entities.Poi
 import com.example.veegtrackerpro.data.media.MarkerPhotoResolver
+import com.example.veegtrackerpro.navigation.OsmAndNavigator
 import com.example.veegtrackerpro.ui.components.VeegMap
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -131,6 +135,11 @@ fun DriverScreen(
         viewModel.startLocationAwareness()
     }
 
+    RouteVoiceNavigation(
+        enabled = viewModel.isTracking,
+        instruction = currentInstruction
+    )
+
     Box(modifier = Modifier.fillMaxSize()) {
         VeegMap(
             modifier = Modifier.fillMaxSize(),
@@ -149,7 +158,13 @@ fun DriverScreen(
             state = todayState,
             currentInstruction = currentInstruction,
             onPickRoute = { showRoutePicker = true },
-            onImportGpx = { gpxLauncher.launch("*/*") }
+            onImportGpx = { gpxLauncher.launch("*/*") },
+            onNavigateRoute = {
+                selectedRoute?.let { route ->
+                    OsmAndNavigator.navigateRoute(context, route, routePoints)
+                }
+            },
+            canNavigateRoute = selectedRoute != null && routePoints.isNotEmpty()
         )
 
         StatusTopBar(
@@ -281,6 +296,16 @@ fun DriverScreen(
             ) {
                 PoiActionSheet(
                     poi = poi,
+                    onNavigate = {
+                        OsmAndNavigator.navigateToMarker(
+                            context = context,
+                            latitude = poi.latitude,
+                            longitude = poi.longitude,
+                            name = listOf(poi.type, poi.description)
+                                .filterNot { it.isNullOrBlank() }
+                                .joinToString(" - ")
+                        )
+                    },
                     onDismiss = { selectedPoi = null },
                     onSave = { status, actionTaken, followUpAction, note, photoUris ->
                         viewModel.updatePoi(
@@ -300,11 +325,70 @@ fun DriverScreen(
 }
 
 @Composable
+private fun RouteVoiceNavigation(
+    enabled: Boolean,
+    instruction: String
+) {
+    val appContext = LocalContext.current.applicationContext
+    var isReady by remember { mutableStateOf(false) }
+    var lastSpokenInstruction by remember { mutableStateOf("") }
+    val textToSpeech = remember {
+        var engine: TextToSpeech? = null
+        engine = TextToSpeech(appContext) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                engine?.language = Locale("nl", "NL")
+                engine?.setSpeechRate(0.95f)
+                isReady = true
+            }
+        }
+        engine
+    }
+
+    DisposableEffect(textToSpeech) {
+        onDispose {
+            textToSpeech.stop()
+            textToSpeech.shutdown()
+        }
+    }
+
+    LaunchedEffect(enabled, instruction, isReady) {
+        if (!enabled) {
+            lastSpokenInstruction = ""
+            textToSpeech.stop()
+            return@LaunchedEffect
+        }
+        val spokenText = instruction.toSpokenRouteInstruction() ?: return@LaunchedEffect
+        if (isReady && spokenText != lastSpokenInstruction) {
+            lastSpokenInstruction = spokenText
+            textToSpeech.speak(
+                spokenText,
+                TextToSpeech.QUEUE_FLUSH,
+                null,
+                "route-instruction-${System.currentTimeMillis()}"
+            )
+        }
+    }
+}
+
+private fun String.toSpokenRouteInstruction(): String? {
+    val text = trim()
+    if (text.isBlank()) return null
+    val isActionable = text.contains("linksaf", ignoreCase = true)
+        || text.contains("rechtsaf", ignoreCase = true)
+        || text.contains("rechtdoor", ignoreCase = true)
+        || text.contains("volg de route", ignoreCase = true)
+        || text.contains("bestemming bereikt", ignoreCase = true)
+    return if (isActionable) text else null
+}
+
+@Composable
 fun TodaySummaryCard(
     state: DriverTodayState,
     currentInstruction: String,
     onPickRoute: () -> Unit,
     onImportGpx: () -> Unit,
+    onNavigateRoute: () -> Unit,
+    canNavigateRoute: Boolean,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -428,6 +512,16 @@ fun TodaySummaryCard(
                 )
             }
 
+            Button(
+                onClick = onNavigateRoute,
+                enabled = canNavigateRoute,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.GpsFixed, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Navigeer route met OsmAnd")
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -529,6 +623,7 @@ fun BottomActionBar(
 @Composable
 fun PoiActionSheet(
     poi: Poi,
+    onNavigate: () -> Unit,
     onDismiss: () -> Unit,
     onSave: (status: String, actionTaken: String, followUpAction: String, note: String, photoUris: List<Uri>) -> Unit
 ) {
@@ -572,6 +667,15 @@ fun PoiActionSheet(
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary
         )
+
+        Button(
+            onClick = onNavigate,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.GpsFixed, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Navigeer naar marker met OsmAnd")
+        }
 
         referencePreviewUri?.let { previewUri ->
             ReferencePreviewCard(previewUri = previewUri)

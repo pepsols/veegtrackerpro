@@ -14,6 +14,7 @@ import com.example.veegtrackerpro.VeegApplication
 import com.example.veegtrackerpro.data.gpx.parser.GpxParser
 import com.example.veegtrackerpro.data.local.entities.Poi
 import com.example.veegtrackerpro.data.local.entities.Route
+import com.example.veegtrackerpro.navigation.OsmAndNavigator
 import com.example.veegtrackerpro.service.TrackingService
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -34,6 +35,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import android.Manifest
 import java.io.InputStream
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 data class DriverTodayState(
@@ -50,6 +52,11 @@ data class NearbyRouteSuggestion(
     val route: Route,
     val distanceToRouteMeters: Int,
     val distanceToStartMeters: Int
+)
+
+private data class UpcomingTurn(
+    val index: Int,
+    val bearingDelta: Double
 )
 
 class DriverViewModel(application: Application) : AndroidViewModel(application) {
@@ -231,29 +238,7 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
             val prog = ((nearestIndex.toFloat() / (route.size - 1)) * 100).toInt()
             _progress.value = prog
 
-            // Navigation logic
-            if (nearestIndex < route.size - 1) {
-                val nextPoint = route[nearestIndex + 1]
-                val distanceToNext = lastTracked.distanceToAsDouble(nextPoint)
-                
-                val instruction = if (nearestIndex < route.size - 5) {
-                    val currentBearing = lastTracked.bearingTo(nextPoint)
-                    val futurePoint = route[Math.min(nearestIndex + 5, route.size - 1)]
-                    val futureBearing = nextPoint.bearingTo(futurePoint)
-                    
-                    val bearingDiff = normalizeAngle(futureBearing - currentBearing)
-                    
-                    val turn = when {
-                        bearingDiff > 20 -> "Sla rechtsaf over ${distanceToNext.toInt()}m"
-                        bearingDiff < -20 -> "Sla linksaf over ${distanceToNext.toInt()}m"
-                        else -> "Rechtdoor over ${distanceToNext.toInt()}m"
-                    }
-                    turn
-                } else {
-                    "Bestemming bereikt"
-                }
-                _currentInstruction.value = instruction
-            }
+            _currentInstruction.value = buildRouteInstruction(route, lastTracked, nearestIndex)
         }
 
         updateTodayState()
@@ -264,6 +249,70 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
         while (a <= -180) a += 360
         while (a > 180) a -= 360
         return a
+    }
+
+    private fun buildRouteInstruction(
+        route: List<GeoPoint>,
+        currentLocation: GeoPoint,
+        nearestIndex: Int
+    ): String {
+        if (nearestIndex >= route.lastIndex - 2) return "Bestemming bereikt"
+
+        val upcomingTurn = findUpcomingTurn(route, nearestIndex)
+        if (upcomingTurn != null) {
+            val metersToTurn = distanceAlongRoute(route, currentLocation, nearestIndex, upcomingTurn.index).roundToInt()
+            val direction = if (upcomingTurn.bearingDelta > 0) "rechtsaf" else "linksaf"
+            return when {
+                metersToTurn <= 25 -> "Nu $direction"
+                metersToTurn <= 250 -> "Over ${roundInstructionDistance(metersToTurn)} meter $direction"
+                else -> "Volg de route, over ${roundInstructionDistance(metersToTurn)} meter $direction"
+            }
+        }
+
+        return "Rechtdoor, volg de route"
+    }
+
+    private fun findUpcomingTurn(route: List<GeoPoint>, nearestIndex: Int): UpcomingTurn? {
+        if (route.size < 6) return null
+        val scanStart = maxOf(nearestIndex + 2, 2)
+        val scanEnd = minOf(route.lastIndex - 2, nearestIndex + 80)
+        if (scanStart > scanEnd) return null
+
+        for (index in scanStart..scanEnd) {
+            val before = route[index - 2]
+            val current = route[index]
+            val after = route[index + 2]
+            val bearingIn = before.bearingTo(current)
+            val bearingOut = current.bearingTo(after)
+            val delta = normalizeAngle(bearingOut - bearingIn)
+            if (abs(delta) >= 35) {
+                return UpcomingTurn(index = index, bearingDelta = delta)
+            }
+        }
+        return null
+    }
+
+    private fun distanceAlongRoute(
+        route: List<GeoPoint>,
+        currentLocation: GeoPoint,
+        nearestIndex: Int,
+        targetIndex: Int
+    ): Double {
+        if (targetIndex <= nearestIndex) return 0.0
+        var meters = currentLocation.distanceToAsDouble(route[minOf(nearestIndex + 1, route.lastIndex)])
+        for (index in (nearestIndex + 1) until targetIndex) {
+            meters += route[index].distanceToAsDouble(route[index + 1])
+        }
+        return meters
+    }
+
+    private fun roundInstructionDistance(meters: Int): Int {
+        val bucket = when {
+            meters < 50 -> 5
+            meters < 200 -> 10
+            else -> 50
+        }
+        return ((meters + bucket / 2) / bucket) * bucket
     }
 
     fun selectRoute(route: Route, navigateToStart: Boolean = false) {
@@ -526,20 +575,12 @@ class DriverViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     private fun launchNavigationTo(point: GeoPoint) {
-        val app = getApplication<Application>()
-        val uri = Uri.parse("google.navigation:q=${point.latitude},${point.longitude}&mode=b")
-        val intent = Intent(Intent.ACTION_VIEW, uri).apply {
-            setPackage("com.google.android.apps.maps")
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        val fallbackIntent = Intent(
-            Intent.ACTION_VIEW,
-            Uri.parse("geo:${point.latitude},${point.longitude}?q=${point.latitude},${point.longitude}(Startpunt route)")
-        ).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        runCatching { app.startActivity(intent) }
-            .recoverCatching { app.startActivity(fallbackIntent) }
+        OsmAndNavigator.navigateToMarker(
+            context = getApplication<Application>(),
+            latitude = point.latitude,
+            longitude = point.longitude,
+            name = "Startpunt route"
+        )
     }
 
     override fun onCleared() {
