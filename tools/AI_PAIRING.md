@@ -1,11 +1,12 @@
-# Codex + Gemini
+# Codex + Gemini + Llama
 
-Deze repo heeft nu simpele wrappers om Codex direct, en Codex + Gemini samen te gebruiken vanaf dezelfde workspace.
+Deze repo heeft simpele wrappers om Codex direct, Codex + Gemini samen, en lokale Llama-delegatie te gebruiken vanaf dezelfde workspace.
 
 Bestanden:
 
 - `tools/codex.ps1`
 - `tools/codex-gemini.ps1`
+- `tools/llama-delegate.ps1`
 
 `tools/codex.ps1` doet alleen dit:
 
@@ -22,15 +23,10 @@ Voorbeelden:
 .\tools\codex.ps1 exec "Bekijk deze repo en vat de architectuur samen"
 ```
 
-Wat het script doet:
+Wat `tools/codex-gemini.ps1` doet:
 
 - `review`: Codex beantwoordt de taak eerst, Gemini reviewt daarna het Codex-resultaat.
 - `compare`: Codex en Gemini geven elk hun eigen antwoord op dezelfde prompt.
-
-Voorwaarden:
-
-- `codex` moet in je `PATH` staan en ingelogd zijn.
-- `gemini` moet in je `PATH` staan en ingelogd zijn.
 
 Voorbeelden:
 
@@ -56,3 +52,19 @@ Optionele modellen:
   -GeminiModel "gemini-2.5-pro" `
   -Prompt "Review the dashboard auth flow and propose minimal changes"
 ```
+
+Lokale Llama-delegatie via de OpenAI-compatible endpoint:
+
+```powershell
+.\tools\llama-delegate.ps1 "Vat app/build.gradle.kts samen"
+```
+
+```powershell
+"Noem drie risico's in deze wijziging" | .\tools\llama-delegate.ps1
+```
+
+Voorwaarden:
+
+- `codex` moet in je `PATH` staan en ingelogd zijn.
+- `gemini` moet in je `PATH` staan en ingelogd zijn.
+- `http://192.168.178.199:11434/v1` moet bereikbaar zijn voor `meta-llama-3.1-8b-instruct`.
