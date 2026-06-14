@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Technische Samenvatting Veegtracker Pro</title>
+  <style>
+    :root {
+      --bg: #f2f5f1;
+      --paper: #ffffff;
+      --ink: #152019;
+      --muted: #4d5f53;
+      --accent: #215a3b;
+      --soft: #e7f0e8;
+      --line: #d4ddd6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(180deg, #e8eee8 0%, var(--bg) 100%);
+      color: var(--ink);
+    }
+    main {
+      max-width: 980px;
+      margin: 28px auto;
+      padding: 38px 44px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    h1, h2, h3 { line-height: 1.2; }
+    h1 { margin: 0 0 12px; color: var(--accent); font-size: 31px; }
+    h2 { margin: 28px 0 10px; font-size: 21px; border-bottom: 2px solid var(--soft); padding-bottom: 6px; }
+    h3 { margin: 18px 0 8px; font-size: 17px; }
+    p, li { font-size: 14px; line-height: 1.55; }
+    .lead { font-size: 16px; color: var(--muted); }
+    .panel {
+      padding: 14px 16px;
+      background: var(--soft);
+      border-left: 4px solid var(--accent);
+      margin: 16px 0 22px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      padding: 14px 16px;
+      background: #fcfdfc;
+    }
+    ul { margin: 8px 0 0 20px; }
+    code {
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      background: #eef2ed;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+    @media print {
+      body { background: #fff; }
+      main { margin: 0; max-width: none; border: 0; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Technische Samenvatting Veegtracker Pro</h1>
+    <p class="lead">
+      Veegtracker Pro is een Android-first systeem voor route-uitvoering en operationeel beheer. De repository bevat de hoofdapp, ondersteunende dashboard-assets, Firebase-configuratie en tooling voor lokale en cloudgebaseerde workflows.
+    </p>
+
+    <div class="panel">
+      <strong>Technische scope:</strong> Android-app in Kotlin/Compose, lokale Room-opslag, GPX-verwerking, foreground location tracking, Firebase-sync en een single-page webdashboard in assets.
+    </div>
+
+    <h2>Repositorystructuur</h2>
+    <div class="grid">
+      <div class="card">
+        <strong><code>app/</code></strong>
+        <ul>
+          <li>Hoofdmodule van de Android-app</li>
+          <li>UI, data, services, navigatie en assets</li>
+        </ul>
+      </div>
+      <div class="card">
+        <strong><code>dashboard/</code></strong>
+        <ul>
+          <li>Documentatie en structuur van het webdashboard</li>
+          <li>Preview- en planbestanden</li>
+        </ul>
+      </div>
+      <div class="card">
+        <strong><code>mobile/</code></strong>
+        <ul>
+          <li>Aanvullende mobiele projectmap</li>
+          <li>Niet de primaire Android-module in deze repo</li>
+        </ul>
+      </div>
+      <div class="card">
+        <strong><code>tools/</code></strong>
+        <ul>
+          <li>Lokale scripts voor build- en agentworkflows</li>
+          <li>PowerShell-helpers voor delegatie en tooling</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>Build En Platform</h2>
+    <ul>
+      <li>Gradle Kotlin DSL met rootconfiguratie in <code>build.gradle.kts</code> en <code>settings.gradle.kts</code>.</li>
+      <li>Enkel actieve hoofdmodule: <code>:app</code>.</li>
+      <li><code>compileSdk 37</code>, <code>targetSdk 37</code>, <code>minSdk 30</code>.</li>
+      <li>Java 11 toolchain voor source- en targetcompatibiliteit.</li>
+      <li>Releasebuild ondersteunt Firebase App Distribution.</li>
+    </ul>
+
+    <h2>Belangrijkste Dependencies</h2>
+    <ul>
+      <li>Jetpack Compose en Material 3 voor UI.</li>
+      <li>Room voor lokale persistente opslag.</li>
+      <li>Firebase Auth, Firestore, Analytics en Storage.</li>
+      <li>Google Play Services Location voor locatie-updates.</li>
+      <li>osmdroid voor kaartweergave en geometriebewerking.</li>
+      <li>Retrofit, Moshi en OkHttp voor HTTP- en serialisatiewerk.</li>
+      <li>Ktor serverdependencies, vermoedelijk voor aanvullende lokale of embedded serverfunctionaliteit.</li>
+    </ul>
+
+    <h2>Applicatiearchitectuur</h2>
+    <h3>Entrypoint En Navigatie</h3>
+    <ul>
+      <li><code>MainActivity.kt</code> start Compose en zet de hoofdstructuur op.</li>
+      <li>De app gebruikt een eenvoudige backstack op basis van Navigation 3 keys.</li>
+      <li>Beschikbare hoofdschermen: login, rolkeuze, chauffeur, taken, werklog, admin en profiel.</li>
+    </ul>
+
+    <h3>Authenticatie</h3>
+    <ul>
+      <li>Google Sign-In wordt afgehandeld via <code>AuthViewModel</code> en <code>GoogleSignInHelper</code>.</li>
+      <li>In debugmodus bestaat een bypass naar de chauffeursweergave.</li>
+    </ul>
+
+    <h3>Datalaag</h3>
+    <ul>
+      <li><code>VeegDatabase</code> definieert de Room-database.</li>
+      <li><code>VeegDao</code> bevat CRUD en querylogica voor routes, POI's en trackingpunten.</li>
+      <li>Entiteiten omvatten minimaal <code>Route</code>, <code>Poi</code> en <code>TrackingPoint</code>.</li>
+    </ul>
+
+    <h3>GPX-Verwerking</h3>
+    <ul>
+      <li><code>GpxParser</code> leest GPX XML en zet deze om naar interne modellen.</li>
+      <li>Routes worden als GPX-tekst opgeslagen en bij gebruik vertaald naar <code>GeoPoint</code>-reeksen.</li>
+      <li>Bij import in adminmodus kunnen waypoints automatisch als POI's worden opgeslagen.</li>
+    </ul>
+
+    <h2>Functioneel Gedrag Per Module</h2>
+    <h3>Chauffeursmodule</h3>
+    <ul>
+      <li><code>DriverViewModel</code> beheert routekeuze, locatiebewustzijn, trackingstatus en routevoortgang.</li>
+      <li>Route-instructies worden lokaal afgeleid uit bochtanalyse op basis van GPX-geometrie.</li>
+      <li>Er bestaat logica voor suggesties van nabijgelegen routes op basis van huidige locatie.</li>
+      <li>POI-updates bevatten status, uitgevoerde actie, vervolgactie, notitie en foto's.</li>
+      <li>Foto's kunnen worden hergebruikt of geüpload naar Firebase Storage.</li>
+    </ul>
+
+    <h3>Trackingservice</h3>
+    <ul>
+      <li><code>TrackingService</code> draait als foreground service tijdens actieve ritregistratie.</li>
+      <li>Locatiepunten worden periodiek vastgelegd en opgeslagen voor routehistorie en voortgang.</li>
+    </ul>
+
+    <h3>Beheerdersmodule</h3>
+    <ul>
+      <li><code>AdminViewModel</code> behandelt routekeuze, GPX-import, POI-beheer en route-updates.</li>
+      <li>Routepunten en trackinghistorie worden geladen voor kaartweergave en analyse.</li>
+      <li>PDF-export is gekoppeld via <code>PdfGenerator</code>.</li>
+    </ul>
+
+    <h3>Werklog En Taken</h3>
+    <ul>
+      <li>Er is een aparte werklogweergave voor uitgevoerde punten.</li>
+      <li>Een taakdashboard ondersteunt overzicht en afronding van operationele taken.</li>
+    </ul>
+
+    <h2>Kaarten En Media</h2>
+    <ul>
+      <li><code>VeegMap.kt</code> verzorgt kaartweergave, markerinteractie en visuele codering van punten.</li>
+      <li><code>MarkerPhotoResolver</code> koppelt POI's aan lokale markerafbeeldingen of opgeslagen fotobronnen.</li>
+      <li>Route- en markerassets zijn opgenomen in <code>app/src/main/assets</code>.</li>
+    </ul>
+
+    <h2>Cloud En Dashboard</h2>
+    <ul>
+      <li><code>SyncRepository</code> synchroniseert POI-gegevens met Firestore.</li>
+      <li>Het webdashboard is een single-page interface in <code>app/src/main/assets/web/index.html</code>.</li>
+      <li>Volgens de documentatie ondersteunt het dashboard tabs voor routes, meldingen, taken en AI-agent.</li>
+      <li>Firebase Hosting kan worden gebruikt om de dashboard-assets online te publiceren.</li>
+    </ul>
+
+    <h2>Configuratiepunten</h2>
+    <ul>
+      <li><code>local.properties</code> levert onder meer <code>MAPS_API_KEY</code>, <code>GOOGLE_WEB_CLIENT_ID</code> en <code>OPENAI_TTS_ENDPOINT</code>.</li>
+      <li>Manifest placeholders en BuildConfig-velden worden vanuit lokale properties gevuld.</li>
+      <li>Firebase-configuratie is aanwezig in projectbestanden en documentatie.</li>
+    </ul>
+
+    <h2>Technische Observaties En Aannames</h2>
+    <ul>
+      <li>De repository laat een werkend functioneel skelet zien met duidelijke domeinscheiding tussen chauffeur, admin en dashboard.</li>
+      <li>Er zijn aanwijzingen voor operationeel gebruik, maar de mate van productierijpheid is niet volledig bevestigd zonder runtime-validatie.</li>
+      <li>De aanwezigheid van een embedded dashboard in app-assets duidt op hergebruik van dezelfde datasets voor mobiel en web.</li>
+      <li>De precieze rol van de Ktor-serverdependencies is in de gelezen kernbestanden niet bevestigd.</li>
+    </ul>
+
+    <h2>Conclusie</h2>
+    <p>
+      Technisch gezien is Veegtracker Pro een geïntegreerd veldwerksysteem met een moderne Android-basis, lokale opslag, cloudkoppeling en ondersteunend dashboard. De codebase is duidelijk gericht op route-uitvoering, registratie en beheer en biedt een bruikbare basis voor verdere hardening, integratie en opschaling.
+    </p>
+  </main>
+</body>
+</html>

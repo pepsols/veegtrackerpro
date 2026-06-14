@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Samenvatting Project Veegtracker Pro</title>
+  <style>
+    :root {
+      --bg: #f4f1e8;
+      --paper: #fffdf8;
+      --ink: #1e2a22;
+      --muted: #526257;
+      --accent: #2d6a4f;
+      --accent-soft: #dcebdd;
+      --line: #d8d2c4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(180deg, #ebe5d6 0%, var(--bg) 100%);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    main {
+      max-width: 900px;
+      margin: 32px auto;
+      padding: 40px 48px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+    }
+    h1, h2 {
+      margin: 0 0 12px;
+      line-height: 1.2;
+    }
+    h1 {
+      font-size: 32px;
+      color: var(--accent);
+    }
+    h2 {
+      margin-top: 28px;
+      font-size: 20px;
+      border-bottom: 2px solid var(--accent-soft);
+      padding-bottom: 6px;
+    }
+    p, li { font-size: 15px; }
+    .lead {
+      font-size: 17px;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+    .meta {
+      padding: 14px 16px;
+      background: var(--accent-soft);
+      border-left: 4px solid var(--accent);
+      margin: 18px 0 24px;
+    }
+    ul {
+      margin: 10px 0 0 18px;
+      padding: 0;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+    code {
+      font-family: Consolas, monospace;
+      font-size: 13px;
+      background: #f0ece2;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    @media print {
+      body { background: #fff; }
+      main {
+        margin: 0;
+        max-width: none;
+        box-shadow: none;
+        border: none;
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Samenvatting Project Veegtracker Pro</h1>
+    <p class="lead">
+      Veegtracker Pro is een Android-app voor chauffeurs en beheerders die veeg- en onderhoudsroutes ondersteunt met routebeheer, GPS-tracking, taakregistratie, fotoverwerking en live synchronisatie via Firebase.
+    </p>
+
+    <div class="meta">
+      <strong>Projecttype:</strong> Android-app met embedded webdashboard<br>
+      <strong>Techniek:</strong> Kotlin, Jetpack Compose, Room, Firebase, osmdroid, Google Location Services, Ktor<br>
+      <strong>Hoofdmodule:</strong> <code>app/</code>
+    </div>
+
+    <h2>Doel Van Het Project</h2>
+    <p>
+      Het project ondersteunt operationeel werk rond veeg- en onderhoudsroutes. Chauffeurs kunnen routes selecteren, navigeren, ritten volgen en punten op de kaart afhandelen. Beheerders kunnen routes importeren, objecten beheren, opmerkingen toevoegen en rapportages genereren.
+    </p>
+
+    <h2>Belangrijkste Functies</h2>
+    <div class="grid">
+      <div class="card">
+        <strong>Chauffeursmodus</strong>
+        <ul>
+          <li>Route kiezen en volgen</li>
+          <li>Live GPS-tracking en voortgang</li>
+          <li>Route-instructies zoals linksaf/rechtsaf</li>
+          <li>Registratie van uitgevoerde punten met notities en foto's</li>
+        </ul>
+      </div>
+      <div class="card">
+        <strong>Beheerdersmodus</strong>
+        <ul>
+          <li>GPX-routes importeren</li>
+          <li>POI's en routecommentaar beheren</li>
+          <li>Routeafbeeldingen koppelen</li>
+          <li>PDF-rapporten genereren</li>
+        </ul>
+      </div>
+      <div class="card">
+        <strong>Cloud Koppeling</strong>
+        <ul>
+          <li>Firebase Authentication</li>
+          <li>Firestore voor live data</li>
+          <li>Firebase Storage voor foto's</li>
+          <li>Firebase Hosting voor dashboardpublicatie</li>
+        </ul>
+      </div>
+      <div class="card">
+        <strong>Dashboard</strong>
+        <ul>
+          <li>Single-page webdashboard</li>
+          <li>Tabs voor routes, meldingen, taken en AI-agent</li>
+          <li>Kaartweergave en detailoverlay</li>
+          <li>Snelle taakcreatie vanuit de browser</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>Architectuur In Hoofdlijnen</h2>
+    <p>
+      De Android-app gebruikt een lokale Room-database voor routes, trackingpunten en POI's. GPX-bestanden worden ingelezen en vertaald naar routegeometrie. De gebruikersinterface is opgebouwd met Jetpack Compose en gebruikt viewmodels voor domeinlogica.
+    </p>
+    <ul>
+      <li><code>MainActivity.kt</code> bestuurt login, rolkeuze en navigatie.</li>
+      <li><code>DriverViewModel.kt</code> behandelt routekeuze, live locatie, tracking en voortgang.</li>
+      <li><code>AdminViewModel.kt</code> behandelt route-import, POI-beheer en PDF-export.</li>
+      <li><code>TrackingService.kt</code> verzorgt foreground GPS-tracking tijdens ritten.</li>
+      <li><code>SyncRepository.kt</code> verzorgt synchronisatie met Firestore.</li>
+    </ul>
+
+    <h2>Belangrijke Data En Bestanden</h2>
+    <ul>
+      <li>Routes staan onder meer in <code>app/src/main/assets/routes</code> en <code>app/src/main/assets/web/routes</code>.</li>
+      <li>Referentiebeelden voor markers staan in <code>app/src/main/assets/web/marker-images</code>.</li>
+      <li>Het webdashboard staat in <code>app/src/main/assets/web/index.html</code>.</li>
+      <li>Firebase-configuratie en hostinghulp staan in <code>FIREBASE_HULP.md</code>.</li>
+    </ul>
+
+    <h2>Gebruikersstromen</h2>
+    <ul>
+      <li>Gebruiker logt in via Google of gebruikt in debug een bypass naar de chauffeursweergave.</li>
+      <li>Na login kiest de gebruiker een rol: chauffeur of beheerder.</li>
+      <li>Chauffeur selecteert een route, start tracking en werkt POI's af met status, actie en foto's.</li>
+      <li>Beheerder importeert routes, voegt punten toe en genereert rapportages.</li>
+      <li>Dashboardgebruikers beheren taken en bekijken meldingen live via de webinterface.</li>
+    </ul>
+
+    <h2>Technische Observaties</h2>
+    <ul>
+      <li>De app is gericht op moderne Android-versies met <code>minSdk 30</code> en <code>targetSdk 37</code>.</li>
+      <li>Compose, Room, Firebase en osmdroid vormen de kern van de technische stack.</li>
+      <li>Er is ondersteuning voor live navigatie-instructies op basis van routegeometrie.</li>
+      <li>Foto's van uitgevoerde werkzaamheden kunnen naar Firebase Storage worden geüpload.</li>
+      <li>Er is ook een Ktor-serverdependency aanwezig, wat wijst op aanvullende lokale of embedded serverfunctionaliteit.</li>
+    </ul>
+
+    <h2>Samenvattende Conclusie</h2>
+    <p>
+      Veegtracker Pro is opgezet als een praktijkgerichte werkapp voor route-uitvoering en beheer. De combinatie van offline lokale opslag, GPX-routeverwerking, live GPS-tracking, foto- en taakregistratie en cloudkoppelingen maakt het project geschikt voor veldwerk met centrale ondersteuning vanuit een dashboard.
+    </p>
+  </main>
+</body>
+</html>
