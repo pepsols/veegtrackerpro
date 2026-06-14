@@ -1,7 +1,7 @@
 interface:
   display_name: "Local LLM"
-  short_description: "Choose and run local LLM stacks"
-  default_prompt: "Use $local-llm to recommend a practical local model stack for my hardware and use case."
+  short_description: "Build local coding agent stacks"
+  default_prompt: "Use $local-llm to recommend a practical Ollama and Open WebUI setup for local coding on my hardware."
 
 policy:
   allow_implicit_invocation: true
